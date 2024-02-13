@@ -7,7 +7,7 @@ import { Github } from "lucide-react";
 import { Fira_Code } from "next/font/google";
 import axios from "axios";
 
-const socket = io("http://localhost:9002");
+const socket = io("http://mukulyadav.com:9002");
 
 const firaCode = Fira_Code({ subsets: ["latin"] });
 
@@ -36,7 +36,7 @@ export default function Home() {
   const handleClickDeploy = useCallback(async () => {
     setLoading(true);
 
-    const { data } = await axios.post(`http://localhost:9000/project`, {
+    const { data } = await axios.post(`http://mukulyadav.com:9000/project`, {
       gitURL: repoURL,
       slug: projectId,
     });
@@ -53,8 +53,8 @@ export default function Home() {
 
   const handleSocketIncommingMessage = useCallback((message: string) => {
     console.log(`[Incomming Socket Message]:`, typeof message, message);
-    const { log } = JSON.parse(message);
-    setLogs((prev) => [...prev, log]);
+    // const { log } = JSON.parse(message);
+    setLogs((prev) => [...prev, message]);
     logContainerRef.current?.scrollIntoView({ behavior: "smooth" });
   }, []);
 
