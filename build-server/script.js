@@ -5,10 +5,9 @@ const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
 const mime = require("mime-types");
 const Redis = require("ioredis");
 // const { network } = require("./network");
+require("dotenv").config();
 
-const publisher = new Redis(
-  "rediss://default:AVNS_H7-yZcPFlpSQprYMRQR@redis-e9d1d6a-mukul7661.a.aivencloud.com:24504"
-);
+const publisher = new Redis(process.env.AIVEN_REDIS_URL);
 
 // console.log(network);
 
@@ -21,10 +20,10 @@ const publisher = new Redis(
 // });
 
 const s3Client = new S3Client({
-  region: "ap-south-1",
+  region: process.env.AWS_S3_REGION,
   credentials: {
-    accessKeyId: "AKIAYS2NUGJPPSV44P4C",
-    secretAccessKey: "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",
+    accessKeyId: process.env.AWS_ACCESS_KEY,
+    secretAccessKey: process.env.AWS_SECRET_KEY,
   },
 });
 

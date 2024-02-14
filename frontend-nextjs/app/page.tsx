@@ -7,7 +7,7 @@ import { Github } from "lucide-react";
 import { Fira_Code } from "next/font/google";
 import axios from "axios";
 
-const socket = io("http://mukulyadav.com:9002");
+const socket = io(`http://${process.env.NEXT_PUBLIC_API_SERVER_URL}:9002`);
 
 const firaCode = Fira_Code({ subsets: ["latin"] });
 
@@ -36,10 +36,13 @@ export default function Home() {
   const handleClickDeploy = useCallback(async () => {
     setLoading(true);
 
-    const { data } = await axios.post(`http://mukulyadav.com:9000/project`, {
-      gitURL: repoURL,
-      slug: projectId,
-    });
+    const { data } = await axios.post(
+      `http://${process.env.NEXT_PUBLIC_API_SERVER_URL}:9000/project`,
+      {
+        gitURL: repoURL,
+        slug: projectId,
+      }
+    );
 
     if (data && data.data) {
       const { projectSlug, url } = data.data;

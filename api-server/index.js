@@ -6,7 +6,8 @@ const cors = require("cors");
 const Redis = require("ioredis");
 
 const app = express();
-const PORT = 9000;
+require("dotenv").config();
+const PORT = process.env.PORT;
 
 app.use(
   cors({
@@ -15,9 +16,7 @@ app.use(
   })
 );
 
-const subscriber = new Redis(
-  "rediss://default:AVNS_H7-yZcPFlpSQprYMRQR@redis-e9d1d6a-mukul7661.a.aivencloud.com:24504"
-);
+const subscriber = new Redis(process.env.AIVEN_REDIS_URL);
 
 const io = new Server({ cors: "*" });
 
@@ -31,10 +30,10 @@ io.on("connection", (socket) => {
 io.listen(9002, () => console.log("Socket Server 9002"));
 
 const ecsClient = new ECSClient({
-  region: "ap-south-1",
+  region: process.env.AWS_S3_REGION,
   credentials: {
-    accessKeyId: "AKIAYS2NUGJPPSV44P4C",
-    secretAccessKey: "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",
+    accessKeyId: process.env.AWS_ACCESS_KEY,
+    secretAccessKey: process.env.AWS_SECRET_KEY,
   },
 });
 
@@ -48,7 +47,7 @@ app.use(express.json());
 app.post("/project", async (req, res) => {
   const { gitURL, slug } = req.body;
   const projectSlug = slug ? slug : generateSlug();
-
+  console.log(projectSlug);
   // Spin the container
   const command = new RunTaskCommand({
     cluster: config.CLUSTER,
@@ -83,7 +82,10 @@ app.post("/project", async (req, res) => {
 
   return res.json({
     status: "queued",
-    data: { projectSlug, url: `http://${projectSlug}.mukulyadav.com:8000` },
+    data: {
+      projectSlug,
+      url: `http://${projectSlug}.${process.env.PROXY_SERVER_URL}:8000`,
+    },
   });
 });
 
@@ -98,4 +100,4 @@ async function initRedisSubscribe() {
 
 initRedisSubscribe();
 
-app.listen(PORT, () => console.log(`API Server Running..${PORT}`));
+app.listen(PORT, () => console.log(`API Server Running..${process.env.PORT}`));
