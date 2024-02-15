@@ -6,12 +6,17 @@ import { Input } from "@/components/ui/input";
 import { Github } from "lucide-react";
 import { Fira_Code } from "next/font/google";
 import axios from "axios";
+import { useSession } from "next-auth/react";
 
 const socket = io(`http://${process.env.NEXT_PUBLIC_API_SERVER_URL}:9002`);
 
 const firaCode = Fira_Code({ subsets: ["latin"] });
 
 export default function Home() {
+  const { data: session, status } = useSession();
+  console.log("status", status);
+  console.log("session", session);
+
   const [repoURL, setURL] = useState<string>("");
 
   const [logs, setLogs] = useState<string[]>([]);
