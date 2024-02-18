@@ -3,7 +3,7 @@ import GithubProvider from "next-auth/providers/github";
 import GoogleProvider from "next-auth/providers/google";
 import prismaAdapter, { prisma } from "@/app/prismaAdapter";
 
-const authOptions = {
+export const authOptions = {
   secret: process.env.NEXTAUTH_SECRET as string,
   adapter: prismaAdapter,
   // callbacks: {
