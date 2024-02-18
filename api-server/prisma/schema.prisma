@@ -64,13 +64,13 @@ model Project {
   customDomain String?       @map("custom_domain")
   user         User          @relation(fields: [userId], references: [id])
   userId       String        @map("user_id")
-  Deployement  Deployement[]
+  Deployment  Deployment[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
-enum DeployementStatus {
+enum DeploymentStatus {
   NOT_STARTED
   QUEUED
   IN_PROGRESS
@@ -78,11 +78,11 @@ enum DeployementStatus {
   FAIL
 }
 
-model Deployement {
+model Deployment {
   id        String            @id @default(uuid())
   project   Project           @relation(fields: [projectId], references: [id])
   projectId String            @map("project_id")
-  status    DeployementStatus @default(NOT_STARTED)
+  status    DeploymentStatus @default(NOT_STARTED)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

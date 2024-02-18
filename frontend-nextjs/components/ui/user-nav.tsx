@@ -15,16 +15,20 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { signOut } from "next-auth/react";
+import { Avatar, AvatarFallback, AvatarImage } from "./avatar";
 
 export function UserNav() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-          {/* <Avatar className="h-8 w-8">
-              <AvatarImage src="/avatars/01.png" alt="@shadcn" />
-              <AvatarFallback>SC</AvatarFallback>
-            </Avatar> */}
+        <Button
+          variant="ghost"
+          className="relative h-8 w-8 rounded-full bg-white hover:bg-white"
+        >
+          <Avatar className="h-8 w-8">
+            <AvatarImage src="/profile-avatar.png" alt="@shadcn" />
+            <AvatarFallback>MY</AvatarFallback>
+          </Avatar>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56" align="end" forceMount>
