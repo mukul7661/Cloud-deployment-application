@@ -21,22 +21,11 @@ export default function Home() {
   const router = useRouter();
   const { data: session, status } = useSession();
 
+  if (session !== null) {
+    router.push("/projects");
+  }
+
   console.log(session, status);
 
-  return (
-    <div>
-      {session && (
-        <>
-          <Button onClick={() => signOut()}>Sign out</Button>
-          <Button onClick={() => router.push("/projects/create")}>
-            Create project
-          </Button>
-        </>
-      )}
-      {!session && <Button onClick={() => signIn()}>Sign in</Button>}
-      <Button onClick={() => router.push("/projects/guest/123")}>
-        Deploy as guest
-      </Button>
-    </div>
-  );
+  return <div>home page</div>;
 }
