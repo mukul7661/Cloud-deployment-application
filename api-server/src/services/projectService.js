@@ -3,6 +3,7 @@ const { ecsClient, config } = require("./aws");
 const { getUserRepos } = require("./github");
 const { generateSlug } = require("random-word-slugs");
 const { RunTaskCommand } = require("@aws-sdk/client-ecs");
+const { client } = require("./clickHouse");
 
 const prisma = getPrisma();
 class ProjectService {
@@ -74,7 +75,22 @@ class ProjectService {
 
   async fetchDeploymentLogs(deploymentId) {
     try {
-      console.log(deploymentId, "id");
+      if (process.env.CLICKHOUSE_ENABLED === "true") {
+        const logs = await client.query({
+          query: `SELECT event_id, deployment_id, log, timestamp from log_events where deployment_id = {deployment_id:String}`,
+          query_params: {
+            deployment_id: deploymentId,
+          },
+          format: "JSONEachRow",
+        });
+
+        const rawLogs = await logs.json();
+
+        console.log(rawLogs, "logs");
+
+        return rawLogs;
+      }
+
       const logs = await prisma.eventLog.findMany({
         where: {
           deployment_id: deploymentId,
@@ -153,6 +169,7 @@ class ProjectService {
               { name: "GIT_REPOSITORY__URL", value: modifiedUrl },
               { name: "PROJECT_ID", value: projectId },
               { name: "DEPLOYEMENT_ID", value: deployment.id },
+              { name: "KAFKA_ENABLED", value: process.env.KAFKA_ENABLED },
             ],
           },
         ],

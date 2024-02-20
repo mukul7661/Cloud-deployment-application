@@ -33,7 +33,6 @@ class ProjectController {
 
   fetchGithubRepos = async (req, res) => {
     const user = req.user;
-    console.log(user, "fetching");
     try {
       const userReposFiltered = await this.projectService.fetchGithubRepos(
         user
@@ -51,7 +50,6 @@ class ProjectController {
 
     try {
       const logs = await this.projectService.fetchDeploymentLogs(deploymentId);
-      console.log(logs);
       res.json({ logs });
     } catch (err) {
       console.log("Error in fetchDeploymentLogs", err);
@@ -73,8 +71,6 @@ class ProjectController {
     // const { name, gitURL } = safeParseResult.data;
     const { name, gitURL } = req.body;
     const user = req.user;
-
-    console.log(name, gitURL, user);
 
     const project = await this.projectService.createProject(name, gitURL, user);
 
