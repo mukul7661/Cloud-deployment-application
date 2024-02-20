@@ -18,6 +18,7 @@ export default function GuestProject() {
   console.log("session", session);
 
   const [repoURL, setURL] = useState<string>("");
+  const [projectName, setProjectName] = useState<string>("");
 
   const [logs, setLogs] = useState<string[]>([]);
 
@@ -45,7 +46,17 @@ export default function GuestProject() {
       `http://${process.env.NEXT_PUBLIC_API_SERVER_URL}:9000/project`,
       {
         gitURL: repoURL,
-        slug: projectId,
+        name: projectName,
+        email: session?.user?.email,
+      }
+    );
+
+    console.log(data?.data?.project?.id);
+
+    const res = await axios.post(
+      `http://${process.env.NEXT_PUBLIC_API_SERVER_URL}:9000/deploy`,
+      {
+        projectId: data?.data?.project?.id,
       }
     );
 
@@ -57,7 +68,7 @@ export default function GuestProject() {
       console.log(`Subscribing to logs:${projectSlug}`);
       socket.emit("subscribe", `logs:${projectSlug}`);
     }
-  }, [projectId, repoURL]);
+  }, [projectName, repoURL]);
 
   const handleSocketIncommingMessage = useCallback((message: string) => {
     console.log(`[Incomming Socket Message]:`, typeof message, message);
@@ -79,6 +90,13 @@ export default function GuestProject() {
       <div className="w-[600px]">
         <span className="flex justify-start items-center gap-2">
           <Github className="text-5xl" />
+          <Input
+            disabled={loading}
+            value={projectName}
+            onChange={(e) => setProjectName(e.target.value)}
+            type="text"
+            placeholder="Project name"
+          />
           <Input
             disabled={loading}
             value={repoURL}

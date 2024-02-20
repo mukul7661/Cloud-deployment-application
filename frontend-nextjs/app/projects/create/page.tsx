@@ -27,7 +27,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -49,6 +49,21 @@ import {
 } from "@/components/ui/select";
 
 import styled from "styled-components";
+import { useSession } from "next-auth/react";
+import axios from "axios";
+import { useRouter } from "next/navigation";
+import { Github } from "lucide-react";
+import {
+  Dialog,
+  DialogHeader,
+  DialogOverlay,
+  DialogTrigger,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+  DialogFooter,
+  DialogClose,
+} from "@/components/ui/dialog";
 
 const RepoCardContainer = styled.div`
   display: flex;
@@ -73,20 +88,95 @@ const RepoCardItem = styled.div`
 `;
 
 export default function CardWithForm() {
-  const [repos, setRepos] = useState([
-    { name: "mukul7661/project1" },
-    { name: "mukul7661/project2" },
-    { name: "mukul7661/project3" },
-    { name: "mukul7661/project4" },
-  ]);
+  const session = useSession();
+  const router = useRouter();
+
+  if (session?.data === null) {
+    router.push("/");
+  }
+
+  console.log(session?.data?.user?.email);
+  const [repos, setRepos] = useState([]);
+  const [repoURL, setRepoURL] = useState<string>("");
+  const [projectName, setProjectName] = useState<string>("");
+  const [showConfigModal, setShowConfigModal] = useState<boolean>(false);
+
+  const handleClickDeploy = useCallback(async () => {
+    console.log(repoURL);
+    const { data } = await axios.post(
+      `http://${process.env.NEXT_PUBLIC_API_SERVER_URL}:9000/project`,
+      {
+        gitURL: repoURL,
+        name: projectName,
+        email: session?.data?.user?.email,
+      }
+    );
+
+    console.log(data?.data?.project?.id);
+
+    const projectId = data?.data?.project?.id;
+
+    const res = await axios.post(
+      `http://${process.env.NEXT_PUBLIC_API_SERVER_URL}:9000/deploy`,
+      {
+        projectId,
+      }
+    );
+    console.log(res);
+
+    const deploymentId = res?.data?.data?.deploymentId;
+    router.push(`/projects/${projectId}/${deploymentId}`);
+
+    // if (data && data.data) {
+    //   const { projectSlug, url } = data.data;
+    //   setProjectId(projectSlug);
+    //   setDeployPreviewURL(url);
+
+    //   console.log(`Subscribing to logs:${projectSlug}`);
+    //   socket.emit("subscribe", `logs:${projectSlug}`);
+    // }
+  }, [projectName, repoURL]);
+
+  function handleImportClick(url: string) {
+    setRepoURL(url);
+
+    setShowConfigModal(true);
+  }
+
+  useEffect(() => {
+    async function fetchGiturls() {
+      try {
+        if (session?.data?.user?.email) {
+          const res = await axios.get(
+            `http://${process.env.NEXT_PUBLIC_API_SERVER_URL}:9000/api/user-repos?email=${session?.data?.user?.email}`,
+            {
+              headers: {
+                "Content-Type": "application/json",
+              },
+            }
+          );
+
+          console.log(res);
+          setRepos(res?.data?.userReposFiltered);
+        }
+      } catch (err) {
+        console.log("Error: ", err);
+      }
+    }
+    fetchGiturls();
+  }, [session?.data?.user?.email]);
+
   return (
-    <Card className="w-[600px] m-auto mt-10">
-      <CardHeader>
-        <CardTitle>Import your git repository</CardTitle>
-        <CardDescription>Deploy your new project in one-click.</CardDescription>
-      </CardHeader>
-      <CardContent>
-        {/* <form>
+    <>
+      <Card className="w-[600px] m-auto mt-10">
+        <CardHeader>
+          <CardTitle>Import your git repository</CardTitle>
+          <CardDescription>
+            Deploy your new project in one-click.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {/* <form>
           <div className="grid w-full items-center gap-4">
             <div className="flex flex-col space-y-1.5">
               <Label htmlFor="name">Name</Label>
@@ -97,35 +187,71 @@ export default function CardWithForm() {
               <Select>
                 <SelectTrigger id="framework">
                   <SelectValue placeholder="Select" />
-                </SelectTrigger>
+                  </SelectTrigger>
                 <SelectContent position="popper">
-                  <SelectItem value="next">Next.js</SelectItem>
+                <SelectItem value="next">Next.js</SelectItem>
                   <SelectItem value="sveltekit">SvelteKit</SelectItem>
                   <SelectItem value="astro">Astro</SelectItem>
                   <SelectItem value="nuxt">Nuxt.js</SelectItem>
-                </SelectContent>
+                  </SelectContent>
               </Select>
-            </div>
-          </div>
-        </form> */}
-        <RepoCardContainer>
-          {repos?.map((repo) => (
-            <RepoCardItem
-              key={repo?.name}
-              className="flex flex-row justify-around items-center"
-            >
-              <div>mukul7661/project</div>
-              <Button className="flex-end">Import</Button>
-            </RepoCardItem>
-          ))}
-        </RepoCardContainer>
-
-        {/* <div className="border border-[#1d1919]">mukul7661/project</div> */}
-      </CardContent>
-      {/* <CardFooter className="flex justify-between">
+              </div>
+              </div>
+            </form> */}
+          <RepoCardContainer>
+            {repos?.map((repo) => (
+              <RepoCardItem
+                key={repo?.name}
+                className="flex flex-row justify-around items-center"
+              >
+                <div>{repo?.name}</div>
+                <Button
+                  onClick={() => handleImportClick(repo?.gitURL)}
+                  className="flex-end"
+                >
+                  Import
+                </Button>
+              </RepoCardItem>
+            ))}
+          </RepoCardContainer>
+        </CardContent>
+        {/* <CardFooter className="flex justify-between">
         <Button variant="outline">Cancel</Button>
         <Button>Deploy</Button>
       </CardFooter> */}
-    </Card>
+      </Card>
+      {showConfigModal && (
+        <Dialog open={showConfigModal}>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogClose onClick={() => setShowConfigModal(false)} />
+              <DialogTitle>Deploy</DialogTitle>
+              <DialogDescription>
+                Deploy your project in one click{" "}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="name" className="text-right">
+                  Name
+                </Label>
+                <Input
+                  value={projectName}
+                  onChange={(e) => setProjectName(e.target.value)}
+                  type="text"
+                  placeholder="Project name"
+                  className="col-span-3"
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button onClick={handleClickDeploy} type="submit">
+                Save changes
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
+    </>
   );
 }
