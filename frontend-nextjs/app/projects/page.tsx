@@ -11,30 +11,51 @@ import {
 } from "@/components/ui/card";
 import { useEffect, useState } from "react";
 import axios from "axios";
+import { authInstance } from "@/lib/closureVariable";
+import { serialize } from "cookie";
 
 const Projects = () => {
   const router = useRouter();
   const { data: session, status } = useSession();
 
+  console.log(session);
+
   if (session === null) {
     router.push("/");
+  }
+  if (session?.user?.token) {
+    console.log("setting cookie");
+    const cookieValue = serialize("access-token", session?.user?.token, {
+      // httpOnly: true,
+      maxAge: 30 * 60 * 60 * 24,
+      path: "/",
+    });
+
+    document.cookie = cookieValue;
   }
 
   const [projectList, setProjectList] = useState<[]>([]);
 
   useEffect(() => {
     async function fetchProjectDetails() {
-      const res = await axios.get(
-        `http://${process.env.NEXT_PUBLIC_API_SERVER_URL}:9000/projects`,
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      try {
+        // const res = await axios.get(
+        //   `http://${process.env.NEXT_PUBLIC_API_SERVER_URL}:9000/api/project/all`,
+        //   {
+        //     headers: {
+        //       "Content-Type": "application/json",
+        //     },
+        //   }
+        // );
+        const res = await authInstance.get("/api/project/all", {
+          withCredentials: true,
+        });
 
-      console.log(res);
-      setProjectList(res?.data);
+        console.log(res);
+        setProjectList(res?.data);
+      } catch (err) {
+        console.log("Error:", err);
+      }
     }
     fetchProjectDetails();
   }, []);
