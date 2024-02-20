@@ -1,30 +1,3 @@
-// "use client";
-
-// import { useEffect, useState } from "react";
-
-// async function fetchGiturls() {
-//   return [{ name: "mukul7661/vercel-clone" }];
-// }
-
-// export default function CreateProject() {
-//   const [gitUrls, setGitUrls] = useState(null);
-//   useEffect(() => {
-//     const getUrls = async () => {
-//       const gitUrls = await fetchGiturls();
-//       setGitUrls(gitUrls);
-//     };
-//     getUrls();
-//   }, []);
-//   console.log(gitUrls);
-//   return (
-//     <>
-//       {gitUrls?.map((gitUrl) => (
-//         <div key={gitUrl}>{gitUrl?.name}</div>
-//       ))}
-//     </>
-//   );
-// }
-
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
@@ -104,12 +77,13 @@ export default function CardWithForm() {
   const handleClickDeploy = useCallback(async () => {
     console.log(repoURL);
     const { data } = await axios.post(
-      `http://${process.env.NEXT_PUBLIC_API_SERVER_URL}:9000/project`,
+      `http://${process.env.NEXT_PUBLIC_API_SERVER_URL}:9000/api/project/create`,
       {
         gitURL: repoURL,
         name: projectName,
         email: session?.data?.user?.email,
-      }
+      },
+      { withCredentials: true }
     );
 
     console.log(data?.data?.project?.id);
@@ -117,10 +91,11 @@ export default function CardWithForm() {
     const projectId = data?.data?.project?.id;
 
     const res = await axios.post(
-      `http://${process.env.NEXT_PUBLIC_API_SERVER_URL}:9000/deploy`,
+      `http://${process.env.NEXT_PUBLIC_API_SERVER_URL}:9000/api/project/deploy`,
       {
         projectId,
-      }
+      },
+      { withCredentials: true }
     );
     console.log(res);
 
@@ -148,11 +123,12 @@ export default function CardWithForm() {
       try {
         if (session?.data?.user?.email) {
           const res = await axios.get(
-            `http://${process.env.NEXT_PUBLIC_API_SERVER_URL}:9000/api/user-repos?email=${session?.data?.user?.email}`,
+            `http://${process.env.NEXT_PUBLIC_API_SERVER_URL}:9000/api/project/user-repos?email=${session?.data?.user?.email}`,
             {
               headers: {
                 "Content-Type": "application/json",
               },
+              withCredentials: true,
             }
           );
 

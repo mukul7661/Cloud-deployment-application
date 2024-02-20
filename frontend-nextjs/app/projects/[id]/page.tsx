@@ -22,20 +22,24 @@ const Project = () => {
 
   useEffect(() => {
     async function fetchProjectDetails() {
-      const res = await axios.get(
-        `http://${process.env.NEXT_PUBLIC_API_SERVER_URL}:9000/project?projectId=${projectId}`,
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
+      try {
+        const res = await axios.get(
+          `http://${process.env.NEXT_PUBLIC_API_SERVER_URL}:9000/api/project/id?projectId=${projectId}`,
+          {
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
+        if (res?.data === "") {
+          router.push("/");
         }
-      );
-      if (res?.data === "") {
-        router.push("/");
-      }
-      console.log(res?.data);
+        console.log(res?.data);
 
-      setDeployments(res?.data?.Deployment);
+        setDeployments(res?.data?.Deployment);
+      } catch (err) {
+        console.log("Error: ", err);
+      }
     }
     fetchProjectDetails();
   }, []);

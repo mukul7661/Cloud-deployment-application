@@ -1,11 +1,14 @@
 import Link from "next/link";
 
 import { cn } from "@/lib/utils";
+import { useSession } from "next-auth/react";
 
 export function MainNav({
   className,
   ...props
 }: React.HTMLAttributes<HTMLElement>) {
+  const session = useSession();
+  console.log(session);
   return (
     <nav
       className={cn("flex items-center space-x-4 lg:space-x-6", className)}
@@ -23,12 +26,14 @@ export function MainNav({
       >
         Create project
       </Link>
-      <Link
-        href="/projects/guest/123"
-        className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
-      >
-        Deploy as guest
-      </Link>
+      {!session?.data && (
+        <Link
+          href="/projects/guest"
+          className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
+        >
+          Deploy as guest
+        </Link>
+      )}
     </nav>
   );
 }

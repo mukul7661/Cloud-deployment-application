@@ -14,7 +14,7 @@ model Account {
   provider           String
   providerAccountId  String
   refresh_token      String?  @db.Text
-  access_token       String?  @db.Text
+  access_token       String?  @db.Text @unique
   expires_at         Int?
   token_type         String?
   scope              String?
@@ -23,7 +23,7 @@ model Account {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([provider, providerAccountId])
+  // @@unique([provider, providerAccountId])
 }
 
 model Session {
@@ -86,4 +86,11 @@ model Deployment {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model EventLog {
+  event_id      String     @id @default(uuid())
+  deployment_id String
+  log           String
+  timestamp     DateTime   @default(now())
 }
