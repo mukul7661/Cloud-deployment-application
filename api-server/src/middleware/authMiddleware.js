@@ -15,7 +15,6 @@ const authMiddleware = async (req, res, next) => {
         email: guestUser?.email,
         userId: guestUser?.id,
       };
-      console.log(user, "user");
 
       req.user = user;
 
@@ -56,7 +55,6 @@ const authMiddleware = async (req, res, next) => {
       accessToken: account?.access_token,
       userId: account?.userId,
     };
-    console.log(user, "user");
 
     if (!user) {
       return res.status(401).json({ error: "Unauthorized - User not found" });

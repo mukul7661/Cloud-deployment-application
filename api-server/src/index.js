@@ -10,6 +10,7 @@ const { ecsClient, config } = require("./services/aws");
 const apiRoutes = require("./routes/route");
 const { getUserRepos } = require("./services/github");
 const cookieParser = require("cookie-parser");
+const { initkafkaConsumer } = require("./services/kafka");
 
 const app = express();
 require("dotenv").config();
@@ -198,7 +199,12 @@ io.listen(9002, () => console.log("Socket Server 9002"));
 // });
 
 app.listen(PORT, () => {
-  initRedisSubscribe();
+  console.log(process.env.KAFKA_ENABLED);
+  if (process.env.KAFKA_ENABLED === "true") {
+    initkafkaConsumer();
+  } else {
+    initRedisSubscribe();
+  }
 
   console.log(`API Server Running..${process.env.PORT}`);
 });
