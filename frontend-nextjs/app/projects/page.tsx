@@ -10,9 +10,19 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { useEffect, useState } from "react";
-import axios from "axios";
-import { authInstance } from "@/lib/closureVariable";
+import { authInstance } from "@/lib/authInstance";
 import { serialize } from "cookie";
+import { Button } from "@/components/ui/button";
+
+export const formattedDate = (inputDate: string) => {
+  const dateObject = new Date(inputDate);
+  const day = dateObject.getDate().toString().padStart(2, "0");
+  const month = (dateObject.getMonth() + 1).toString().padStart(2, "0");
+  const year = dateObject.getFullYear().toString().slice(-2);
+
+  const formattedDate = `${day}-${month}-${year}`;
+  return formattedDate;
+};
 
 const Projects = () => {
   const router = useRouter();
@@ -35,18 +45,18 @@ const Projects = () => {
   }
 
   const [projectList, setProjectList] = useState<[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const filterProjects = (project) => {
+    return (
+      project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      project.gitURL.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  };
 
   useEffect(() => {
     async function fetchProjectDetails() {
       try {
-        // const res = await axios.get(
-        //   `http://${process.env.NEXT_PUBLIC_API_SERVER_URL}:9000/api/project/all`,
-        //   {
-        //     headers: {
-        //       "Content-Type": "application/json",
-        //     },
-        //   }
-        // );
         const res = await authInstance.get("/api/project/all", {
           withCredentials: true,
         });
@@ -62,34 +72,75 @@ const Projects = () => {
 
   return (
     <>
-      <div className="grid gap-10 md:grid-cols-4 lg:grid-cols-3 m-10">
-        {projectList?.map((project) => (
+      <div className="flex items-center justify-end w-full">
+        <input
+          type="text"
+          placeholder="🔍  Search Projects or Repositories"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full text-white bg-[#151313] px-4 py-2 rounded-md border focus:ring-1 focus:ring-white  focus:outline-none  mt-6 ml-10 mr-10"
+        />
+        <Button
+          onClick={() => router.push("/projects/create")}
+          className="mt-6 mr-10"
+        >
+          Add new Project
+        </Button>
+        {/* <SearchIcon className="absolute top-1/2 right-4 transform -translate-y-1/2 h-5 w-5 text-gray-500" /> */}
+      </div>
+      <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-3 m-10">
+        {projectList?.filter(filterProjects)?.map((project) => (
           <Card
-            onClick={() => router.push(`/projects/${project?.id}`)}
+            onClick={() => {
+              console.log("div");
+              router.push(`/projects/${project?.id}`);
+            }}
             key={project?.id}
             className="hover:ring-1 bg-[#151313] cursor-pointer hover:ring-white "
           >
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-2xl   font-medium">
+              <CardTitle className="text-2xl font-medium">
                 {project?.name}
               </CardTitle>
-              {/* <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                className="h-4 w-4 text-muted-foreground"
+              <Button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  console.log(
+                    `/projects/${project?.id}/${project?.Deployment[0]?.id}`
+                  );
+                  router.push(
+                    `/projects/${project?.id}/${project?.Deployment[0]?.id}`
+                  );
+                }}
               >
-                <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-              </svg> */}
+                See Logs
+              </Button>
             </CardHeader>
-            <CardContent>
-              <div className="text-xl font-bold">$45,231.89</div>
+            <CardContent className="flex-col">
+              <a
+                href={`http://${project?.subDomain}.localhost:8000`}
+                className="text-[14px] hover:underline"
+                target="_blank" // If you want to open the link in a new tab
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {`${project?.subDomain}.localhost:8000`}
+              </a>
+              <p>
+                <a
+                  href={project?.gitURL.replace("git://", "https://")}
+                  className="text-[14px] hover:underline"
+                  target="_blank" // If you want to open the link in a new tab
+                  rel="noopener noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {project?.gitURL.slice(17).replace(/\.git$/, "")}
+                </a>
+              </p>
               <p className="text-xs text-muted-foreground">
-                +20.1% from last month
+                {`Last Updated at: ${formattedDate(
+                  project?.Deployment[0]?.createdAt
+                )}`}
               </p>
             </CardContent>
           </Card>

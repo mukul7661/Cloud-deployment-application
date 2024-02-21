@@ -1,7 +1,7 @@
 "use client";
 
 import TabBar from "@/components/TabBar";
-import axios from "axios";
+import { authInstance } from "@/lib/authInstance";
 import { useSession } from "next-auth/react";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -16,15 +16,15 @@ const Project = () => {
   const path = usePathname();
   const pathArray = path.split("/");
   const projectId = pathArray[pathArray.length - 1];
-  console.log(projectId, "projectId");
 
-  const [deployments, setDeployments] = useState([{ id: "1" }]);
+  const [deployments, setDeployments] = useState([]);
+  const [project, setProject] = useState(null);
 
   useEffect(() => {
     async function fetchProjectDetails() {
       try {
-        const res = await axios.get(
-          `http://${process.env.NEXT_PUBLIC_API_SERVER_URL}:9000/api/project/id?projectId=${projectId}`,
+        const res = await authInstance.get(
+          `${process.env.NEXT_PUBLIC_API_SERVER_URL}/api/project/id?projectId=${projectId}`,
           {
             headers: {
               "Content-Type": "application/json",
@@ -36,6 +36,7 @@ const Project = () => {
           router.push("/");
         }
         console.log(res?.data);
+        setProject(res?.data);
 
         setDeployments(res?.data?.Deployment);
       } catch (err) {
@@ -47,7 +48,13 @@ const Project = () => {
 
   return (
     <div>
-      <TabBar deployments={deployments} projectId={projectId} />
+      {project && (
+        <TabBar
+          deployments={deployments}
+          projectId={projectId}
+          project={project}
+        />
+      )}
     </div>
   );
 };

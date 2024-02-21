@@ -13,6 +13,16 @@ class ProjectService {
         where: {
           userId: user?.userId,
         },
+        include: {
+          Deployment: {
+            orderBy: {
+              createdAt: "desc",
+            },
+          },
+        },
+        orderBy: {
+          createdAt: "desc", // or 'desc' for descending order
+        },
       });
       return projects;
     } catch (err) {
@@ -29,7 +39,11 @@ class ProjectService {
           userId: user?.userId,
         },
         include: {
-          Deployment: true,
+          Deployment: {
+            orderBy: {
+              createdAt: "desc",
+            },
+          },
         },
       });
       return project;
@@ -143,6 +157,8 @@ class ProjectService {
     });
 
     let modifiedUrl = project?.gitURL.replace("git://", "https://");
+
+    console.log(projectId, deployment.id);
 
     // Spin the container
     const command = new RunTaskCommand({

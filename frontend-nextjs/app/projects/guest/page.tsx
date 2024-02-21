@@ -9,8 +9,9 @@ import axios from "axios";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { serialize } from "cookie";
+import { authInstance } from "@/lib/authInstance";
 
-const socket = io(`http://${process.env.NEXT_PUBLIC_API_SERVER_URL}:9002`);
+// const socket = io(`http://${process.env.NEXT_PUBLIC_API_SERVER_URL}:9002`);
 
 const firaCode = Fira_Code({ subsets: ["latin"] });
 
@@ -45,11 +46,11 @@ export default function GuestProject() {
 
   const handleClickDeploy = useCallback(async () => {
     console.log(repoURL);
-    const { data } = await axios.post(
-      `http://${process.env.NEXT_PUBLIC_API_SERVER_URL}:9000/api/project/create`,
+    const { data } = await authInstance.post(
+      `${process.env.NEXT_PUBLIC_API_SERVER_URL}/api/project/create`,
       {
         gitURL: repoURL,
-        name: projectName,
+        name: "guest-project",
         // email: session?.data?.user?.email,
       },
       { withCredentials: true }
@@ -60,7 +61,7 @@ export default function GuestProject() {
     const projectId = data?.data?.project?.id;
 
     const res = await axios.post(
-      `http://${process.env.NEXT_PUBLIC_API_SERVER_URL}:9000/api/project/deploy`,
+      `${process.env.NEXT_PUBLIC_API_SERVER_URL}/api/project/deploy`,
       {
         projectId,
       },
@@ -101,13 +102,13 @@ export default function GuestProject() {
       <div className="w-[600px]">
         <span className="flex justify-start items-center gap-2">
           <Github className="text-5xl" />
-          <Input
+          {/* <Input
             disabled={loading}
             value={projectName}
             onChange={(e) => setProjectName(e.target.value)}
             type="text"
             placeholder="Project name"
-          />
+          /> */}
           <Input
             disabled={loading}
             value={repoURL}

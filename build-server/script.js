@@ -34,20 +34,24 @@ const s3Client = new S3Client({
 const PROJECT_ID = process.env.PROJECT_ID;
 const DEPLOYEMENT_ID = process.env.DEPLOYEMENT_ID;
 
-const kafka = new Kafka({
-  clientId: `docker-build-server-${DEPLOYEMENT_ID}`,
-  brokers: [`${process.env.KAFKA_BROKER}`],
-  ssl: {
-    ca: [fs.readFileSync(path.join(__dirname, "kafka.pem"), "utf-8")],
-  },
-  sasl: {
-    username: process.env.KAFKA_USERNAME,
-    password: process.env.KAFKA_PASSWORD,
-    mechanism: "plain",
-  },
-});
+let producer = null;
 
-const producer = kafka.producer();
+if (isKafkaEnabled === true) {
+  const kafka = new Kafka({
+    clientId: `docker-build-server-${DEPLOYEMENT_ID}`,
+    brokers: [`${process.env.KAFKA_BROKER}`],
+    ssl: {
+      ca: [fs.readFileSync(path.join(__dirname, "kafka.pem"), "utf-8")],
+    },
+    sasl: {
+      username: process.env.KAFKA_USERNAME,
+      password: process.env.KAFKA_PASSWORD,
+      mechanism: "plain",
+    },
+  });
+
+  producer = kafka.producer();
+}
 
 async function publishLog(log) {
   if (isKafkaEnabled === true) {
@@ -66,7 +70,9 @@ async function publishLog(log) {
 }
 
 async function init() {
-  await producer.connect();
+  if (isKafkaEnabled === true) {
+    await producer.connect();
+  }
 
   console.log("Executing script.js");
   await publishLog("Build Started...");

@@ -13,6 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 
 import styled from "styled-components";
 import { useSession } from "next-auth/react";
+import { formattedDate } from "@/app/projects/page";
 
 const CardContainer = styled.div`
   display: flex;
@@ -36,16 +37,15 @@ const CardItem = styled.div`
   }
 `;
 
-const TabBar = ({ deployments, projectId }) => {
+const TabBar = ({ deployments, projectId, project }) => {
   const router = useRouter();
   const session = useSession();
   if (session?.data === null) {
     router.push("/");
   }
 
-  console.log(deployments);
   return (
-    <Tabs defaultValue="overview" className="space-y-4">
+    <Tabs defaultValue="deployments" className="space-y-4">
       <TabsList className="w-full">
         <TabsTrigger value="overview">Overview</TabsTrigger>
         <TabsTrigger value="deployments">Deployments</TabsTrigger>
@@ -54,8 +54,57 @@ const TabBar = ({ deployments, projectId }) => {
       <TabsContent value="overview" className="space-y-4">
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4"></div>
       </TabsContent>
+      <TabsContent value="overview" className="space-y-4">
+        <Card className="m-auto mt-10 w-[1000px]  bg-[#151313]  ">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-[60px] font-medium">
+              {project?.name}
+            </CardTitle>
+            <Button
+              onClick={(e) => {
+                e.stopPropagation();
+                console.log(
+                  `/projects/${project?.id}/${project?.Deployment[0]?.id}`
+                );
+                router.push(
+                  `/projects/${project?.id}/${project?.Deployment[0]?.id}`
+                );
+              }}
+            >
+              See Logs
+            </Button>
+          </CardHeader>
+          <CardContent className="flex-col">
+            <a
+              href={`http://${project?.subDomain}.localhost:8000`}
+              className="text-[14px] hover:underline"
+              target="_blank" // If you want to open the link in a new tab
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {`${project?.subDomain}.localhost:8000`}
+            </a>
+            <p>
+              <a
+                href={project?.gitURL?.replace("git://", "https://")}
+                className="text-[14px] hover:underline"
+                target="_blank" // If you want to open the link in a new tab
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {project?.gitURL?.slice(17).replace(/\.git$/, "")}
+              </a>
+            </p>
+            <p className="text-xs text-muted-foreground">
+              {`Last Updated at: ${formattedDate(
+                project?.Deployment[0]?.createdAt
+              )}`}
+            </p>
+          </CardContent>
+        </Card>
+      </TabsContent>
       <TabsContent value="deployments" className="space-y-4">
-        <Card className="w-[600px] m-auto mt-10 cursor-pointer">
+        <Card className="w-[600px] m-auto mt-10">
           <CardHeader>
             <CardTitle>Import your git repository</CardTitle>
             <CardDescription>
@@ -65,43 +114,19 @@ const TabBar = ({ deployments, projectId }) => {
           <CardContent>
             <CardContainer>
               {deployments?.map((deployment) => (
-                // <div key={deployment?.id}>{deployments?.id}</div>
                 <CardItem
                   key={deployment?.id}
-                  className="flex flex-row justify-around items-center"
+                  className="flex flex-row justify-around items-center cursor-pointer"
                   onClick={() =>
                     router.push(`/projects/${projectId}/${deployment?.id}`)
                   }
                 >
                   <div>{deployment?.id}</div>
-                  <Button
-                    // onClick={() => handleImportClick(repo?.gitURL)}
-                    className="flex-end"
-                  >
-                    View logs
-                  </Button>
+                  <Button className="flex-end">View logs</Button>
                 </CardItem>
               ))}
-              {/* {repos?.map((repo) => (
-                  <CardItem
-                    key={repo?.name}
-                    className="flex flex-row justify-around items-center"
-                  >
-                    <div>{repo?.name}</div>
-                    <Button
-                      onClick={() => handleImportClick(repo?.gitURL)}
-                      className="flex-end"
-                    >
-                      Import
-                    </Button>
-                  </CardItem>
-                ))} */}
             </CardContainer>
           </CardContent>
-          {/* <CardFooter className="flex justify-between">
-        <Button variant="outline">Cancel</Button>
-        <Button>Deploy</Button>
-      </CardFooter> */}
         </Card>
       </TabsContent>
     </Tabs>

@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Fira_Code } from "next/font/google";
 import { useSession } from "next-auth/react";
+import { authInstance } from "@/lib/authInstance";
 
 const firaCode = Fira_Code({ subsets: ["latin"] });
 
@@ -26,8 +27,8 @@ const Deployment = () => {
   useEffect(() => {
     async function fetchProjectDetails() {
       try {
-        const res = await axios.get(
-          `http://${process.env.NEXT_PUBLIC_API_SERVER_URL}:9000/api/project/logs/${deploymentId}`,
+        const res = await authInstance.get(
+          `${process.env.NEXT_PUBLIC_API_SERVER_URL}/api/project/logs/${deploymentId}`,
           {
             headers: {
               "Content-Type": "application/json",

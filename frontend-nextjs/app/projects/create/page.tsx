@@ -37,6 +37,7 @@ import {
   DialogFooter,
   DialogClose,
 } from "@/components/ui/dialog";
+import { authInstance } from "@/lib/authInstance";
 
 const RepoCardContainer = styled.div`
   display: flex;
@@ -76,8 +77,8 @@ export default function CardWithForm() {
 
   const handleClickDeploy = useCallback(async () => {
     console.log(repoURL);
-    const { data } = await axios.post(
-      `http://${process.env.NEXT_PUBLIC_API_SERVER_URL}:9000/api/project/create`,
+    const { data } = await authInstance.post(
+      `${process.env.NEXT_PUBLIC_API_SERVER_URL}/api/project/create`,
       {
         gitURL: repoURL,
         name: projectName,
@@ -90,8 +91,8 @@ export default function CardWithForm() {
 
     const projectId = data?.data?.project?.id;
 
-    const res = await axios.post(
-      `http://${process.env.NEXT_PUBLIC_API_SERVER_URL}:9000/api/project/deploy`,
+    const res = await authInstance.post(
+      `${process.env.NEXT_PUBLIC_API_SERVER_URL}/api/project/deploy`,
       {
         projectId,
       },
@@ -122,8 +123,8 @@ export default function CardWithForm() {
     async function fetchGiturls() {
       try {
         if (session?.data?.user?.email) {
-          const res = await axios.get(
-            `http://${process.env.NEXT_PUBLIC_API_SERVER_URL}:9000/api/project/user-repos?email=${session?.data?.user?.email}`,
+          const res = await authInstance.get(
+            `${process.env.NEXT_PUBLIC_API_SERVER_URL}/api/project/user-repos?email=${session?.data?.user?.email}`,
             {
               headers: {
                 "Content-Type": "application/json",
@@ -222,7 +223,7 @@ export default function CardWithForm() {
             </div>
             <DialogFooter>
               <Button onClick={handleClickDeploy} type="submit">
-                Save changes
+                Deploy
               </Button>
             </DialogFooter>
           </DialogContent>
