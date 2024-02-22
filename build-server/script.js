@@ -4,7 +4,6 @@ const fs = require("fs");
 const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
 const mime = require("mime-types");
 const Redis = require("ioredis");
-// const { network } = require("./network");
 const { Kafka } = require("kafkajs");
 
 require("dotenv").config();
@@ -12,16 +11,6 @@ require("dotenv").config();
 const publisher = new Redis(process.env.AIVEN_REDIS_URL);
 
 const isKafkaEnabled = process.env.KAFKA_ENABLED === "true";
-
-// console.log(network);
-
-// const s3Client = new S3Client({
-//   region: network.AWS_REGION,
-//   credentials: {
-//     accessKeyId: network.AWS_ACCESS_KEY_ID,
-//     secretAccessKey: network.AWS_SECRET_ACCESS_KEY,
-//   },
-// });
 
 const s3Client = new S3Client({
   region: process.env.AWS_S3_REGION,

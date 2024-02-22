@@ -71,7 +71,6 @@ model Project {
 }
 
 enum DeploymentStatus {
-  NOT_STARTED
   QUEUED
   IN_PROGRESS
   READY
@@ -82,7 +81,7 @@ model Deployment {
   id        String            @id @default(uuid())
   project   Project           @relation(fields: [projectId], references: [id])
   projectId String            @map("project_id")
-  status    DeploymentStatus @default(NOT_STARTED)
+  status    DeploymentStatus @default(QUEUED)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

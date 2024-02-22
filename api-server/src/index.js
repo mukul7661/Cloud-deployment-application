@@ -1,9 +1,9 @@
 const express = require("express");
 const cors = require("cors");
-const { initRedisSubscribe } = require("./services/redis");
 const apiRoutes = require("./routes/route");
 const cookieParser = require("cookie-parser");
 const { initkafkaConsumer } = require("./services/kafka");
+const LogManager = require("./services/RedisManager");
 
 const app = express();
 require("dotenv").config();
@@ -21,12 +21,18 @@ app.use(express.json());
 
 app.use("/api", apiRoutes);
 
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
   console.log(process.env.KAFKA_ENABLED);
   if (process.env.KAFKA_ENABLED === "true") {
-    initkafkaConsumer();
+    await initkafkaConsumer();
   } else {
-    initRedisSubscribe();
+    // await initRedisSubscribe();
+
+    // Create an instance of LogManager using the getInstance method
+    const logManagerInstance = LogManager.getInstance();
+
+    // Initialize Redis subscription
+    logManagerInstance.initRedisSubscribe();
   }
 
   console.log(`API Server Running..${process.env.PORT}`);

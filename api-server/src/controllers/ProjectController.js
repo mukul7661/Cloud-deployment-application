@@ -1,4 +1,4 @@
-const ProjectService = require("../services/projectService");
+const ProjectService = require("../services/ProjectService");
 const { z } = require("zod");
 
 class ProjectController {

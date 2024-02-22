@@ -1,11 +1,16 @@
-const { getPrisma } = require("./prisma");
-const { ecsClient, config } = require("./aws");
+const prismaManager = require("./PrismaManager");
 const { getUserRepos } = require("./github");
 const { generateSlug } = require("random-word-slugs");
 const { RunTaskCommand } = require("@aws-sdk/client-ecs");
 const { client } = require("./clickHouse");
+const ecsManager = require("./AWSManager");
 
-const prisma = getPrisma();
+const ecsClient = ecsManager.getECSClient();
+
+const config = ecsManager.getConfig();
+
+const prisma = prismaManager.getPrisma();
+
 class ProjectService {
   async getAllProjects(user) {
     try {
@@ -21,7 +26,7 @@ class ProjectService {
           },
         },
         orderBy: {
-          createdAt: "desc", // or 'desc' for descending order
+          createdAt: "desc",
         },
       });
       return projects;
@@ -68,15 +73,12 @@ class ProjectService {
 
       if (result) {
         const accessToken = result.access_token;
-        // console.log("Access Token:", accessToken);
         const userRepos = await getUserRepos(accessToken);
-        // console.log(userRepos);
         const userReposFiltered = userRepos?.map((repo) => ({
           name: repo?.name,
           id: repo?.id,
           gitURL: repo?.git_url,
         }));
-        // console.log(userReposFiltered, "repos");
         return userReposFiltered;
       }
       console.log("User not found or no associated project.");
@@ -110,7 +112,7 @@ class ProjectService {
           deployment_id: deploymentId,
         },
         orderBy: {
-          timestamp: "asc", // or 'desc' for descending order
+          timestamp: "asc",
         },
       });
       return logs;
@@ -148,7 +150,6 @@ class ProjectService {
 
     if (!project) return null;
 
-    // Check if there is no running deployement
     const deployment = await prisma.deployment.create({
       data: {
         project: { connect: { id: projectId } },
@@ -160,7 +161,6 @@ class ProjectService {
 
     console.log(projectId, deployment.id);
 
-    // Spin the container
     const command = new RunTaskCommand({
       cluster: config.CLUSTER,
       taskDefinition: config.TASK,

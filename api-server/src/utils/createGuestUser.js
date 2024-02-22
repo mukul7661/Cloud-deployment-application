@@ -1,6 +1,8 @@
-const { getPrisma } = require("../services/prisma");
+// const { getPrisma } = require("../services/prisma");
+const prismaManager = require("../services/PrismaManager");
 
-const prisma = getPrisma();
+// const prisma = getPrisma();
+const prisma = prismaManager.getPrisma();
 
 async function createGuestUser() {
   const user = await prisma.user.upsert({

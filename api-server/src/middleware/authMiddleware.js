@@ -1,4 +1,6 @@
-const { getPrisma } = require("../services/prisma");
+// const { getPrisma } = require("../services/prisma");
+const prismaManager = require("../services/PrismaManager.js");
+
 const { createGuestUser } = require("../utils/createGuestUser.js");
 const authMiddleware = async (req, res, next) => {
   try {
@@ -39,7 +41,9 @@ const authMiddleware = async (req, res, next) => {
 
     // Verify the token from the session
     // const decoded = jwt.verify(accessToken, process.env.NEXTAUTH_JWT_SECRET);
-    const prisma = getPrisma();
+    // const prisma = getPrisma();
+    const prisma = prismaManager.getPrisma();
+
     // Find the user in the database using the decoded email
     const account = await prisma.account.findUnique({
       where: {
