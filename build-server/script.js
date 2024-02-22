@@ -42,6 +42,22 @@ if (isKafkaEnabled === true) {
   producer = kafka.producer();
 }
 
+async function publishStatus(status) {
+  if (isKafkaEnabled === true) {
+    await producer.send({
+      topic: `container-status`,
+      messages: [
+        {
+          key: "status",
+          value: JSON.stringify({ PROJECT_ID, DEPLOYEMENT_ID, status }),
+        },
+      ],
+    });
+  } else {
+    publisher.publish(`status:${DEPLOYEMENT_ID}`, JSON.stringify({ status }));
+  }
+}
+
 async function publishLog(log) {
   if (isKafkaEnabled === true) {
     await producer.send({
@@ -65,6 +81,7 @@ async function init() {
 
   console.log("Executing script.js");
   await publishLog("Build Started...");
+  await publishStatus("IN_PROGRESS");
   const outDirPath = path.join(__dirname, "output");
 
   const p = exec(`cd ${outDirPath} && npm install && npm run build`);
@@ -74,12 +91,12 @@ async function init() {
     await publishLog(data.toString());
   });
 
-  p.stdout.on("error", async function (data) {
-    console.log("Error", data.toString());
-    await publishLog(`error: ${data.toString()}`);
-  });
-
-  p.on("close", async function () {
+  p.on("close", async function (code) {
+    if (code !== 0) {
+      await publishStatus("FAILED");
+      process.exit(1);
+    }
+    console.log(code, "code");
     console.log("Build Complete");
     await publishLog(`Build Complete`);
     const distFolderPath = path.join(__dirname, "output", "dist");
@@ -107,6 +124,8 @@ async function init() {
       console.log("uploaded", filePath);
     }
     await publishLog(`Done`);
+    await publishStatus("READY");
+
     console.log("Done...");
     process.exit(0);
   });

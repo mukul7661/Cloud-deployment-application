@@ -3,7 +3,6 @@ const fs = require("fs");
 const path = require("path");
 const { v4: uuidv4 } = require("uuid");
 const { client } = require("./clickHouse");
-// const { getPrisma } = require("./prisma");
 const prismaManager = require("./PrismaManager");
 
 const kafka = new Kafka({
@@ -21,7 +20,6 @@ const kafka = new Kafka({
 
 const consumer = kafka.consumer({ groupId: "api-server-logs-consumer" });
 
-// const prisma = getPrisma();
 const prisma = prismaManager.getPrisma();
 
 async function initkafkaConsumer() {

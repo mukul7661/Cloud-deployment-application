@@ -4,8 +4,7 @@ const prismaManager = require("../services/PrismaManager.js");
 const { createGuestUser } = require("../utils/createGuestUser.js");
 const authMiddleware = async (req, res, next) => {
   try {
-    // Get the session information from the request headers or body
-    console.log(req.cookies["is-guest"], "guest");
+    // console.log(req.cookies["is-guest"], "guest");
 
     const isGuest = req.cookies["is-guest"];
 
@@ -23,7 +22,7 @@ const authMiddleware = async (req, res, next) => {
       return next();
     }
 
-    console.log(req.cookies["access-token"], "token");
+    // console.log(req.cookies["access-token"], "token");
     // const accessToken =
     //   req.headers.authorization && req.headers.authorization.split(" ")[1];
     // if (!accessToken) {

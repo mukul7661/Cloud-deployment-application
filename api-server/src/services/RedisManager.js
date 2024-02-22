@@ -28,26 +28,62 @@ class LogManager {
         return;
       }
 
-      console.log("Subscribed to logs....");
-      this.subscriber.psubscribe("logs:*");
+      console.log("Subscribed to logs and status....");
+      this.subscriber.psubscribe(["logs:*", "status:*"]);
+
       this.subscriber.on("pmessage", async (pattern, channel, message) => {
-        console.log(message, channel, pattern);
-        const deploymentId = channel.split(":")[1];
-        if (this.isClickhouseEnabled) {
-          await client.insert({
-            table: "log_events",
-            values: [
-              { event_id: uuidv4(), deployment_id: deploymentId, log: message },
-            ],
-            format: "JSONEachRow",
-          });
-        } else {
-          await this.prisma.eventLog.create({
-            data: {
-              deployment_id: deploymentId,
-              log: message,
-            },
-          });
+        try {
+          console.log(message, channel, pattern);
+          const deploymentId = channel.split(":")[1];
+          console.log(deploymentId);
+          if (pattern === "logs:*") {
+            if (this.isClickhouseEnabled) {
+              await client.insert({
+                table: "log_events",
+                values: [
+                  {
+                    event_id: uuidv4(),
+                    deployment_id: deploymentId,
+                    log: message,
+                  },
+                ],
+                format: "JSONEachRow",
+              });
+            } else {
+              await this.prisma.eventLog.create({
+                data: {
+                  deployment_id: deploymentId,
+                  log: message,
+                },
+              });
+            }
+          } else if (pattern === "status:*") {
+            if (this.isClickhouseEnabled) {
+              // await client.insert({
+              //   table: "log_events",
+              //   values: [
+              //     {
+              //       event_id: uuidv4(),
+              //       deployment_id: deploymentId,
+              //       log: message,
+              //     },
+              //   ],
+              //   format: "JSONEachRow",
+              // });
+            } else {
+              const status = JSON.parse(message)?.status;
+              await this.prisma.deployment.update({
+                where: {
+                  id: deploymentId,
+                },
+                data: {
+                  status,
+                },
+              });
+            }
+          }
+        } catch (err) {
+          console.error("Error: ", err);
         }
       });
 

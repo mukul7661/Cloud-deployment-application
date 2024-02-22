@@ -20,6 +20,7 @@ const Deployment = () => {
   console.log(deploymentId, "deploymentId");
 
   const [logs, setLogs] = useState(["Logs will appear here soon!"]);
+  const [deploymentStatus, setDeploymentStatus] = useState("QUEUED");
 
   useEffect(() => {
     async function fetchProjectDetails() {
@@ -38,6 +39,9 @@ const Deployment = () => {
         }
         console.log(res?.data?.logs);
         setLogs(res?.data?.logs);
+        if (res?.data?.logs?.length > 0) {
+          setDeploymentStatus(res?.data?.logs[0]?.deployment?.status);
+        }
       } catch (err) {
         console.log("Error: ", err);
       }
@@ -72,6 +76,7 @@ const Deployment = () => {
       <div
         className={`${firaCode.className} text-sm text-green-500 logs-container mt-5 border-green-500 border-2 rounded-lg p-4 h-[500px] overflow-y-auto`}
       >
+        status: {deploymentStatus}
         <pre className="flex flex-col gap-1">
           {logs.map((log, i) => (
             <code key={i}>{`> ${log?.log}`}</code>

@@ -114,6 +114,9 @@ class ProjectService {
         orderBy: {
           timestamp: "asc",
         },
+        include: {
+          deployment: true,
+        },
       });
       return logs;
     } catch (err) {
