@@ -14,15 +14,12 @@ const Deployment = () => {
 
   const router = useRouter();
 
-  // if (session?.data === null) {
-  //   router.push("/");
-  // }
   const path = usePathname();
   const pathArray = path.split("/");
   const deploymentId = pathArray[pathArray.length - 1];
   console.log(deploymentId, "deploymentId");
 
-  const [logs, setLogs] = useState([]);
+  const [logs, setLogs] = useState(["Logs will appear here soon!"]);
 
   useEffect(() => {
     async function fetchProjectDetails() {
@@ -41,8 +38,6 @@ const Deployment = () => {
         }
         console.log(res?.data?.logs);
         setLogs(res?.data?.logs);
-
-        // setDeployments(res?.data?.Deployment);
       } catch (err) {
         console.log("Error: ", err);
       }
@@ -52,16 +47,16 @@ const Deployment = () => {
 
     const fetchLogsInterval = setInterval(() => {
       fetchProjectDetails();
-    }, 8000);
+    }, parseInt(process.env.NEXT_PUBLIC_LOG_REFRESH_TIME as string));
 
     return () => {
       clearInterval(fetchLogsInterval);
     };
-  }, []);
+  }, [deploymentId]);
 
   useEffect(() => {
     const cookieValue = serialize("is-guest", "true", {
-      // httpOnly: true,
+      httpOnly: true,
       maxAge: 30 * 60 * 60 * 24,
       path: "/",
     });
@@ -74,20 +69,15 @@ const Deployment = () => {
 
   return (
     <div className="w-[900px] m-auto mt-20">
-      {logs?.length > 0 && (
-        <div
-          className={`${firaCode.className} text-sm text-green-500 logs-container mt-5 border-green-500 border-2 rounded-lg p-4 h-[500px] overflow-y-auto`}
-        >
-          <pre className="flex flex-col gap-1">
-            {logs.map((log, i) => (
-              <code
-                // ref={logs.length - 1 === i ? logContainerRef : undefined}
-                key={i}
-              >{`> ${log?.log}`}</code>
-            ))}
-          </pre>
-        </div>
-      )}
+      <div
+        className={`${firaCode.className} text-sm text-green-500 logs-container mt-5 border-green-500 border-2 rounded-lg p-4 h-[500px] overflow-y-auto`}
+      >
+        <pre className="flex flex-col gap-1">
+          {logs.map((log, i) => (
+            <code key={i}>{`> ${log?.log}`}</code>
+          ))}
+        </pre>
+      </div>
     </div>
   );
 };

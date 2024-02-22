@@ -13,7 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 
 import styled from "styled-components";
 import { useSession } from "next-auth/react";
-import { formattedDate } from "@/app/projects/page";
+import { formattedDate } from "@/utils/formatDate";
 
 const CardContainer = styled.div`
   display: flex;
@@ -116,7 +116,7 @@ const TabBar = ({ deployments, projectId, project }) => {
               {deployments?.map((deployment) => (
                 <CardItem
                   key={deployment?.id}
-                  className="flex flex-row justify-around items-center cursor-pointer"
+                  className="flex flex-row justify-around items-center cursor-pointer p-8"
                   onClick={() =>
                     router.push(`/projects/${projectId}/${deployment?.id}`)
                   }

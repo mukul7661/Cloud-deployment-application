@@ -1,6 +1,5 @@
 "use client";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { io } from "socket.io-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Github } from "lucide-react";
@@ -10,8 +9,6 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { serialize } from "cookie";
 import { authInstance } from "@/lib/authInstance";
-
-// const socket = io(`http://${process.env.NEXT_PUBLIC_API_SERVER_URL}:9002`);
 
 const firaCode = Fira_Code({ subsets: ["latin"] });
 
@@ -25,7 +22,7 @@ export default function GuestProject() {
   const [repoURL, setRepoURL] = useState<string>("");
   const [projectName, setProjectName] = useState<string>("");
 
-  const [logs, setLogs] = useState<string[]>([]);
+  const [logs, setLogs] = useState<string[]>(["Logs will Appear here soon!"]);
 
   const [loading, setLoading] = useState(false);
 
@@ -51,7 +48,6 @@ export default function GuestProject() {
       {
         gitURL: repoURL,
         name: "guest-project",
-        // email: session?.data?.user?.email,
       },
       { withCredentials: true }
     );
@@ -71,20 +67,11 @@ export default function GuestProject() {
 
     const deploymentId = res?.data?.data?.deploymentId;
     router.push(`/projects/${projectId}/${deploymentId}`);
-
-    // if (data && data.data) {
-    //   const { projectSlug, url } = data.data;
-    //   setProjectId(projectSlug);
-    //   setDeployPreviewURL(url);
-
-    //   console.log(`Subscribing to logs:${projectSlug}`);
-    //   socket.emit("subscribe", `logs:${projectSlug}`);
-    // }
-  }, [projectName, repoURL]);
+  }, [repoURL, router]);
 
   useEffect(() => {
     const cookieValue = serialize("is-guest", "true", {
-      // httpOnly: true,
+      httpOnly: true,
       maxAge: 30 * 60 * 60 * 24,
       path: "/",
     });
@@ -102,13 +89,6 @@ export default function GuestProject() {
       <div className="w-[600px]">
         <span className="flex justify-start items-center gap-2">
           <Github className="text-5xl" />
-          {/* <Input
-            disabled={loading}
-            value={projectName}
-            onChange={(e) => setProjectName(e.target.value)}
-            type="text"
-            placeholder="Project name"
-          /> */}
           <Input
             disabled={loading}
             value={repoURL}
@@ -138,20 +118,15 @@ export default function GuestProject() {
             </p>
           </div>
         )}
-        {logs.length > 0 && (
-          <div
-            className={`${firaCode.className} text-sm text-green-500 logs-container mt-5 border-green-500 border-2 rounded-lg p-4 h-[300px] overflow-y-auto`}
-          >
-            <pre className="flex flex-col gap-1">
-              {logs.map((log, i) => (
-                <code
-                  // ref={logs.length - 1 === i ? logContainerRef : undefined}
-                  key={i}
-                >{`> ${log}`}</code>
-              ))}
-            </pre>
-          </div>
-        )}
+        <div
+          className={`${firaCode.className} text-sm text-green-500 logs-container mt-5 border-green-500 border-2 rounded-lg p-4 h-[300px] overflow-y-auto`}
+        >
+          <pre className="flex flex-col gap-1">
+            {logs.map((log, i) => (
+              <code key={i}>{`> ${log}`}</code>
+            ))}
+          </pre>
+        </div>
       </div>
     </main>
   );

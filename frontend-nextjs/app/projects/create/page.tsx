@@ -7,30 +7,18 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
 import styled from "styled-components";
 import { useSession } from "next-auth/react";
-import axios from "axios";
 import { useRouter } from "next/navigation";
-import { Github } from "lucide-react";
 import {
   Dialog,
   DialogHeader,
-  DialogOverlay,
-  DialogTrigger,
   DialogContent,
   DialogDescription,
   DialogTitle,
@@ -38,6 +26,7 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 import { authInstance } from "@/lib/authInstance";
+import { X } from "lucide-react";
 
 const RepoCardContainer = styled.div`
   display: flex;
@@ -74,8 +63,13 @@ export default function CardWithForm() {
   const [repoURL, setRepoURL] = useState<string>("");
   const [projectName, setProjectName] = useState<string>("");
   const [showConfigModal, setShowConfigModal] = useState<boolean>(false);
+  const [error, setError] = useState<string>("");
 
   const handleClickDeploy = useCallback(async () => {
+    if (projectName === "") {
+      setError("Please enter a project name");
+      return;
+    }
     console.log(repoURL);
     const { data } = await authInstance.post(
       `${process.env.NEXT_PUBLIC_API_SERVER_URL}/api/project/create`,
@@ -102,15 +96,6 @@ export default function CardWithForm() {
 
     const deploymentId = res?.data?.data?.deploymentId;
     router.push(`/projects/${projectId}/${deploymentId}`);
-
-    // if (data && data.data) {
-    //   const { projectSlug, url } = data.data;
-    //   setProjectId(projectSlug);
-    //   setDeployPreviewURL(url);
-
-    //   console.log(`Subscribing to logs:${projectSlug}`);
-    //   socket.emit("subscribe", `logs:${projectSlug}`);
-    // }
   }, [projectName, repoURL]);
 
   function handleImportClick(url: string) {
@@ -153,38 +138,16 @@ export default function CardWithForm() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {/* <form>
-          <div className="grid w-full items-center gap-4">
-            <div className="flex flex-col space-y-1.5">
-              <Label htmlFor="name">Name</Label>
-              <Input id="name" placeholder="Name of your project" />
-            </div>
-            <div className="flex flex-col space-y-1.5">
-              <Label htmlFor="framework">Framework</Label>
-              <Select>
-                <SelectTrigger id="framework">
-                  <SelectValue placeholder="Select" />
-                  </SelectTrigger>
-                <SelectContent position="popper">
-                <SelectItem value="next">Next.js</SelectItem>
-                  <SelectItem value="sveltekit">SvelteKit</SelectItem>
-                  <SelectItem value="astro">Astro</SelectItem>
-                  <SelectItem value="nuxt">Nuxt.js</SelectItem>
-                  </SelectContent>
-              </Select>
-              </div>
-              </div>
-            </form> */}
           <RepoCardContainer>
             {repos?.map((repo) => (
               <RepoCardItem
                 key={repo?.name}
-                className="flex flex-row justify-around items-center"
+                className="flex flex-row justify-around items-center p-8"
               >
-                <div>{repo?.name}</div>
+                <div className="w-[250px]">{repo?.name}</div>
                 <Button
                   onClick={() => handleImportClick(repo?.gitURL)}
-                  className="flex-end"
+                  className="flex-end "
                 >
                   Import
                 </Button>
@@ -192,16 +155,18 @@ export default function CardWithForm() {
             ))}
           </RepoCardContainer>
         </CardContent>
-        {/* <CardFooter className="flex justify-between">
-        <Button variant="outline">Cancel</Button>
-        <Button>Deploy</Button>
-      </CardFooter> */}
       </Card>
       {showConfigModal && (
         <Dialog open={showConfigModal}>
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
-              <DialogClose onClick={() => setShowConfigModal(false)} />
+              <DialogClose
+                className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground"
+                onClick={() => setShowConfigModal(false)}
+              >
+                <X className="h-4 w-4" />
+                <span className="sr-only">Close</span>
+              </DialogClose>
               <DialogTitle>Deploy</DialogTitle>
               <DialogDescription>
                 Deploy your project in one click{" "}
@@ -219,6 +184,10 @@ export default function CardWithForm() {
                   placeholder="Project name"
                   className="col-span-3"
                 />
+                <div></div>
+                <div className="text-xs text-[#c08484] w-full col-span-3 ml-2">
+                  {error}
+                </div>
               </div>
             </div>
             <DialogFooter>
