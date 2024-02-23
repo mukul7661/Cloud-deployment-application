@@ -1,16 +1,12 @@
 "use client";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Github } from "lucide-react";
-import { Fira_Code } from "next/font/google";
-import axios from "axios";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { serialize } from "cookie";
 import { authInstance } from "@/lib/authInstance";
-
-const firaCode = Fira_Code({ subsets: ["latin"] });
 
 export default function GuestProject() {
   const { data: session, status } = useSession();
@@ -20,18 +16,8 @@ export default function GuestProject() {
   const router = useRouter();
 
   const [repoURL, setRepoURL] = useState<string>("");
-  const [projectName, setProjectName] = useState<string>("");
-
-  const [logs, setLogs] = useState<string[]>(["Logs will Appear here soon!"]);
 
   const [loading, setLoading] = useState(false);
-
-  const [projectId, setProjectId] = useState<string | undefined>();
-  const [deployPreviewURL, setDeployPreviewURL] = useState<
-    string | undefined
-  >();
-
-  const logContainerRef = useRef<HTMLElement>(null);
 
   const isValidURL: [boolean, string | null] = useMemo(() => {
     if (!repoURL || repoURL.trim() === "") return [false, null];
@@ -56,7 +42,7 @@ export default function GuestProject() {
 
     const projectId = data?.data?.project?.id;
 
-    const res = await axios.post(
+    const res = await authInstance.post(
       `${process.env.NEXT_PUBLIC_API_SERVER_URL}/api/project/deploy`,
       {
         projectId,
@@ -102,9 +88,9 @@ export default function GuestProject() {
           disabled={!isValidURL[0] || loading}
           className="w-full mt-3"
         >
-          {loading ? "In Progress" : "Deploy"}
+          Deploy
         </Button>
-        {deployPreviewURL && (
+        {/* {deployPreviewURL && (
           <div className="mt-2 bg-slate-900 py-4 px-2 rounded-lg">
             <p>
               Preview URL{" "}
@@ -117,16 +103,7 @@ export default function GuestProject() {
               </a>
             </p>
           </div>
-        )}
-        <div
-          className={`${firaCode.className} text-sm text-green-500 logs-container mt-5 border-green-500 border-2 rounded-lg p-4 h-[300px] overflow-y-auto`}
-        >
-          <pre className="flex flex-col gap-1">
-            {logs.map((log, i) => (
-              <code key={i}>{`> ${log}`}</code>
-            ))}
-          </pre>
-        </div>
+        )} */}
       </div>
     </main>
   );

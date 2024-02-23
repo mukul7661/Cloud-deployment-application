@@ -27,6 +27,9 @@ import {
 } from "@/components/ui/dialog";
 import { authInstance } from "@/lib/authInstance";
 import { X } from "lucide-react";
+import useCreateDeployment from "@/hooks/useCreateDeployment";
+import { z } from "zod";
+import { ProjectSchema, Repo } from "@/types/zod-types";
 
 const RepoCardContainer = styled.div`
   display: flex;
@@ -50,53 +53,88 @@ const RepoCardItem = styled.div`
   }
 `;
 
+const CreateProjectResponseSchema = z.object({
+  data: z.object({
+    project: ProjectSchema.extend({
+      Deployment: z.undefined(),
+    }),
+  }),
+});
+
+const CreateDeploymentResponseSchema = z.object({
+  data: z.object({
+    data: z.object({ deploymentId: z.string() }),
+  }),
+});
+
+const FetchGitUrlsResponseSchema = z.object({
+  data: z.object({
+    userReposFiltered: z.array(Repo),
+  }),
+});
+
 export default function CardWithForm() {
-  const session = useSession();
+  const { data: session, status } = useSession();
+
   const router = useRouter();
 
-  if (session?.data === null) {
-    router.push("/");
-  }
-
   console.log(session?.data?.user?.email);
-  const [repos, setRepos] = useState([]);
+  const [repos, setRepos] = useState<z.infer<typeof Repo>[] | null>(null);
   const [repoURL, setRepoURL] = useState<string>("");
   const [projectName, setProjectName] = useState<string>("");
   const [showConfigModal, setShowConfigModal] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
+  const [loading, setLoading] = useState<boolean>(true);
 
-  const handleClickDeploy = useCallback(async () => {
+  const {
+    createDeployment,
+
+    data: deploymentData,
+  } = useCreateDeployment();
+
+  const handleClickDeploy = async () => {
     if (projectName === "") {
       setError("Please enter a project name");
       return;
     }
-    console.log(repoURL);
-    const { data } = await authInstance.post(
-      `${process.env.NEXT_PUBLIC_API_SERVER_URL}/api/project/create`,
-      {
-        gitURL: repoURL,
-        name: projectName,
-        email: session?.data?.user?.email,
-      },
-      { withCredentials: true }
-    );
+    const data: z.infer<typeof CreateProjectResponseSchema> =
+      await authInstance.post(
+        `${process.env.NEXT_PUBLIC_API_SERVER_URL}/api/project/create`,
+        {
+          gitURL: repoURL,
+          name: projectName,
+          email: session?.data?.user?.email,
+        },
+        { withCredentials: true }
+      );
+    console.log(data);
+    const parsedData = CreateProjectResponseSchema.safeParse(data);
+    console.log(parsedData);
 
-    console.log(data?.data?.project?.id);
+    if (!parsedData.success) {
+      console.error("Error: ", parsedData.error);
+      return;
+    }
 
-    const projectId = data?.data?.project?.id;
+    console.log(parsedData?.data?.data?.project?.id);
 
-    const res = await authInstance.post(
-      `${process.env.NEXT_PUBLIC_API_SERVER_URL}/api/project/deploy`,
-      {
-        projectId,
-      },
-      { withCredentials: true }
-    );
-    console.log(res);
+    const projectId = parsedData?.data?.data?.project?.id;
 
+    const res: z.infer<typeof CreateDeploymentResponseSchema> =
+      await authInstance.post(
+        `${process.env.NEXT_PUBLIC_API_SERVER_URL}/api/project/deploy`,
+        {
+          projectId,
+        },
+        { withCredentials: true }
+      );
+    // await createDeployment(projectId);
+    // // console.log(res);
+    // console.log(deploymentData, "deploumentdata");
+    // const deploymentId = deploymentData?.data?.data?.deploymentId;
     const deploymentId = res?.data?.data?.deploymentId;
     router.push(`/projects/${projectId}/${deploymentId}`);
-  }, [projectName, repoURL]);
+  };
 
   function handleImportClick(url: string) {
     setRepoURL(url);
@@ -105,98 +143,120 @@ export default function CardWithForm() {
   }
 
   useEffect(() => {
+    if (session === null) {
+      router.push("/");
+    }
     async function fetchGiturls() {
       try {
-        if (session?.data?.user?.email) {
-          const res = await authInstance.get(
-            `${process.env.NEXT_PUBLIC_API_SERVER_URL}/api/project/user-repos?email=${session?.data?.user?.email}`,
-            {
-              headers: {
-                "Content-Type": "application/json",
-              },
-              withCredentials: true,
-            }
-          );
+        if (session?.user?.email) {
+          const res: z.infer<typeof FetchGitUrlsResponseSchema> =
+            await authInstance.get(
+              `${process.env.NEXT_PUBLIC_API_SERVER_URL}/api/project/user-repos?email=${session?.user?.email}`,
+              {
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                withCredentials: true,
+              }
+            );
 
           console.log(res);
-          setRepos(res?.data?.userReposFiltered);
+
+          const parsedResponse = FetchGitUrlsResponseSchema.safeParse(res);
+
+          if (!parsedResponse?.success) {
+            console.error("Error: ", parsedResponse?.error);
+
+            return;
+          }
+          setRepos(parsedResponse?.data?.data?.userReposFiltered);
+          setLoading(false);
         }
       } catch (err) {
         console.log("Error: ", err);
       }
     }
     fetchGiturls();
-  }, [session?.data?.user?.email]);
+  }, [session, router]);
 
   return (
     <>
-      <Card className="w-[600px] m-auto mt-10">
-        <CardHeader>
-          <CardTitle>Import your git repository</CardTitle>
-          <CardDescription>
-            Deploy your new project in one-click.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <RepoCardContainer>
-            {repos?.map((repo) => (
-              <RepoCardItem
-                key={repo?.name}
-                className="flex flex-row justify-around items-center p-8"
-              >
-                <div className="w-[250px]">{repo?.name}</div>
-                <Button
-                  onClick={() => handleImportClick(repo?.gitURL)}
-                  className="flex-end "
-                >
-                  Import
-                </Button>
-              </RepoCardItem>
-            ))}
-          </RepoCardContainer>
-        </CardContent>
-      </Card>
-      {showConfigModal && (
-        <Dialog open={showConfigModal}>
-          <DialogContent className="sm:max-w-[425px]">
-            <DialogHeader>
-              <DialogClose
-                className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground"
-                onClick={() => setShowConfigModal(false)}
-              >
-                <X className="h-4 w-4" />
-                <span className="sr-only">Close</span>
-              </DialogClose>
-              <DialogTitle>Deploy</DialogTitle>
-              <DialogDescription>
-                Deploy your project in one click{" "}
-              </DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="name" className="text-right">
-                  Name
-                </Label>
-                <Input
-                  value={projectName}
-                  onChange={(e) => setProjectName(e.target.value)}
-                  type="text"
-                  placeholder="Project name"
-                  className="col-span-3"
-                />
-                <div></div>
-                <div className="text-xs text-[#c08484] w-full col-span-3 ml-2">
-                  {error}
+      {(status === "loading" || loading) && (
+        <div className="loader-container">
+          <div className="loader"></div>
+        </div>
+      )}
+      {!loading && !(status === "loading") && (
+        <>
+          <Card className="w-[600px] m-auto mt-10">
+            <CardHeader>
+              <CardTitle>Import your git repository</CardTitle>
+              <CardDescription>
+                Deploy your new project in one-click.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <RepoCardContainer>
+                {repos?.map((repo: z.infer<typeof Repo>) => (
+                  <RepoCardItem
+                    key={repo?.name}
+                    className="flex flex-row justify-around items-center p-8"
+                  >
+                    <div className="w-[250px]">{repo?.name}</div>
+                    <Button
+                      onClick={() => handleImportClick(repo?.gitURL)}
+                      className="flex-end "
+                    >
+                      Import
+                    </Button>
+                  </RepoCardItem>
+                ))}
+              </RepoCardContainer>
+            </CardContent>
+          </Card>
+          {showConfigModal && (
+            <Dialog open={showConfigModal}>
+              <DialogContent className="sm:max-w-[425px]">
+                <DialogHeader>
+                  <DialogClose
+                    className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground"
+                    onClick={() => setShowConfigModal(false)}
+                  >
+                    <X className="h-4 w-4" />
+                    <span className="sr-only">Close</span>
+                  </DialogClose>
+                  <DialogTitle>Deploy</DialogTitle>
+                  <DialogDescription>
+                    Deploy your project in one click{" "}
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="name" className="text-right">
+                      Name
+                    </Label>
+                    <Input
+                      value={projectName}
+                      onChange={(e) => setProjectName(e.target.value)}
+                      type="text"
+                      placeholder="Project name"
+                      className="col-span-3"
+                    />
+                    <div></div>
+                    <div className="text-xs text-[#c08484] w-full col-span-3 ml-2">
+                      {error}
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-            <DialogFooter>
-              <Button onClick={handleClickDeploy} type="submit">
-                Deploy
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+                <DialogFooter>
+                  <Button onClick={handleClickDeploy} type="submit">
+                    Deploy
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          )}
+        </>
       )}
     </>
   );

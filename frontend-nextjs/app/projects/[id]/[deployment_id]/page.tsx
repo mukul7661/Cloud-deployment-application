@@ -6,8 +6,17 @@ import { Fira_Code } from "next/font/google";
 import { useSession } from "next-auth/react";
 import { serialize } from "cookie";
 import { authInstance } from "@/lib/authInstance";
+import { z } from "zod";
+import { DeploymentSchema } from "@/types/zod-types";
 
 const firaCode = Fira_Code({ subsets: ["latin"] });
+
+const ResponseSchema = z.object({
+  data: z.object({
+    logs: z.array(z.string()),
+    status: z.string(),
+  }),
+});
 
 const Deployment = () => {
   const session = useSession();
@@ -19,13 +28,13 @@ const Deployment = () => {
   const deploymentId = pathArray[pathArray.length - 1];
   console.log(deploymentId, "deploymentId");
 
-  const [logs, setLogs] = useState(["Logs will appear here soon!"]);
+  const [logs, setLogs] = useState<string[]>(["Logs will appear here soon!"]);
   const [deploymentStatus, setDeploymentStatus] = useState("QUEUED");
 
   useEffect(() => {
     async function fetchProjectDetails() {
       try {
-        const res = await authInstance.get(
+        const res: z.infer<typeof ResponseSchema> = await authInstance.get(
           `${process.env.NEXT_PUBLIC_API_SERVER_URL}/api/project/logs/${deploymentId}`,
           {
             headers: {
@@ -34,14 +43,15 @@ const Deployment = () => {
             withCredentials: true,
           }
         );
-        if (res?.data === "") {
-          // router.push("/");
+
+        const parsedResponse = ResponseSchema.safeParse(res);
+        if (!parsedResponse?.success) {
+          console.error("Error: ", parsedResponse?.error);
+          return;
         }
-        console.log(res?.data?.logs);
-        setLogs(res?.data?.logs);
-        if (res?.data?.logs?.length > 0) {
-          setDeploymentStatus(res?.data?.logs[0]?.deployment?.status);
-        }
+
+        setLogs(parsedResponse?.data?.data?.logs);
+        setDeploymentStatus(parsedResponse?.data?.data?.status);
       } catch (err) {
         console.log("Error: ", err);
       }
@@ -79,7 +89,7 @@ const Deployment = () => {
         status: {deploymentStatus}
         <pre className="flex flex-col gap-1">
           {logs.map((log, i) => (
-            <code key={i}>{`> ${log?.log}`}</code>
+            <code key={i}>{`> ${log}`}</code>
           ))}
         </pre>
       </div>

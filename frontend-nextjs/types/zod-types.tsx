@@ -20,4 +20,9 @@ const ProjectSchema = z.object({
   Deployment: z.array(DeploymentSchema),
 });
 
-export { DeploymentSchema, ProjectSchema };
+const Repo = z.object({
+  name: z.string(),
+  gitURL: z.string(),
+});
+
+export { DeploymentSchema, ProjectSchema, Repo };

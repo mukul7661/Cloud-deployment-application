@@ -114,11 +114,25 @@ class ProjectService {
         orderBy: {
           timestamp: "asc",
         },
-        include: {
-          deployment: true,
+        select: {
+          log: true,
         },
       });
-      return logs;
+
+      const status = await prisma.deployment.findUnique({
+        where: {
+          id: deploymentId,
+        },
+        select: {
+          status: true,
+        },
+      });
+
+      const filteredLogs = logs?.map((log) => {
+        return JSON.parse(log?.log)?.log;
+      });
+
+      return [filteredLogs, status?.status];
     } catch (err) {
       console.error("Error:", err);
       throw new Error("Error fetching logs from DB");

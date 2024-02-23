@@ -14,6 +14,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 import styled from "styled-components";
 import { useSession } from "next-auth/react";
 import { formattedDate } from "@/utils/formatDate";
+import useCreateDeployment from "@/hooks/useCreateDeployment";
+import { authInstance } from "@/lib/authInstance";
 
 const CardContainer = styled.div`
   display: flex;
@@ -37,15 +39,39 @@ const CardItem = styled.div`
   }
 `;
 
-const TabBar = ({ deployments, projectId, project }) => {
+const TabBar = ({ deployments, projectId, project, setLoading }) => {
   const router = useRouter();
   const session = useSession();
   if (session?.data === null) {
     router.push("/");
   }
 
+  const {
+    createDeployment,
+    loading,
+    data: deploymentData,
+  } = useCreateDeployment();
+
+  const handleCreateDeployment = async () => {
+    setLoading(true);
+    const res = await authInstance.post(
+      `${process.env.NEXT_PUBLIC_API_SERVER_URL}/api/project/deploy`,
+      {
+        projectId,
+      },
+      { withCredentials: true }
+    );
+    // await createDeployment(projectId);
+    // // console.log(res);
+    // console.log(deploymentData, "deploumentdata");
+    // const deploymentId = deploymentData?.data?.data?.deploymentId;
+    const deploymentId = res?.data?.data?.deploymentId;
+    router.push(`/projects/${projectId}/${deploymentId}`);
+    setLoading(false);
+  };
+
   return (
-    <Tabs defaultValue="deployments" className="space-y-4">
+    <Tabs defaultValue="overview" className="space-y-4">
       <TabsList className="w-full">
         <TabsTrigger value="overview">Overview</TabsTrigger>
         <TabsTrigger value="deployments">Deployments</TabsTrigger>
@@ -55,6 +81,7 @@ const TabBar = ({ deployments, projectId, project }) => {
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4"></div>
       </TabsContent>
       <TabsContent value="overview" className="space-y-4">
+        <Button onClick={handleCreateDeployment}>Create deployment</Button>
         <Card className="m-auto mt-10 w-[1000px]  bg-[#151313]  ">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-[60px] font-medium">
@@ -63,9 +90,7 @@ const TabBar = ({ deployments, projectId, project }) => {
             <Button
               onClick={(e) => {
                 e.stopPropagation();
-                console.log(
-                  `/projects/${project?.id}/${project?.Deployment[0]?.id}`
-                );
+                setLoading(true);
                 router.push(
                   `/projects/${project?.id}/${project?.Deployment[0]?.id}`
                 );

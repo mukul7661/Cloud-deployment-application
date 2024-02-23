@@ -49,8 +49,10 @@ class ProjectController {
     const deploymentId = req.params.id;
 
     try {
-      const logs = await this.projectService.fetchDeploymentLogs(deploymentId);
-      res.json({ logs });
+      const [logs, status] = await this.projectService.fetchDeploymentLogs(
+        deploymentId
+      );
+      res.json({ logs, status });
     } catch (err) {
       console.log("Error in fetchDeploymentLogs", err);
       res.status(500).json({ error: "Internal Server Error" });
@@ -74,7 +76,7 @@ class ProjectController {
 
     const project = await this.projectService.createProject(name, gitURL, user);
 
-    return res.json({ status: "success", data: { project } });
+    return res.json({ project });
   };
 
   deployProject = async (req, res) => {

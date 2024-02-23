@@ -15,7 +15,7 @@ export function MainNav({
       {...props}
     >
       <Link
-        href="/"
+        href="/projects"
         className="text-sm font-medium transition-colors hover:text-primary"
       >
         Logo
