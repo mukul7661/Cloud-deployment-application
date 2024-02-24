@@ -21,19 +21,19 @@ import { serialize } from "cookie";
 export default function Home() {
   const router = useRouter();
   const { data: session, status } = useSession();
-
+  console.log(session);
   if (session !== null) {
     if (session?.user?.token) {
       console.log("setting cookie");
       const cookieValue = serialize("access-token", session?.user?.token, {
-        // httpOnly: true,
+        httpOnly: true,
         maxAge: 30 * 60 * 60 * 24,
         path: "/",
       });
 
       document.cookie = cookieValue;
     }
-    router.push("/projects");
+    // router.push("/projects");
   }
 
   console.log(session, status);

@@ -38,15 +38,7 @@ const Projects = () => {
     if (session === null) {
       router.push("/");
     }
-    if (session?.user?.token) {
-      const cookieValue = serialize("access-token", session?.user?.token, {
-        httpOnly: true,
-        maxAge: 30 * 60 * 60 * 24,
-        path: "/",
-      });
 
-      document.cookie = cookieValue;
-    }
     async function fetchProjectDetails() {
       try {
         const response: z.infer<typeof ResponseSchema> = await authInstance.get(
