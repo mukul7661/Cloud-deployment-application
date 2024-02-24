@@ -28,6 +28,7 @@ const Project = () => {
   );
 
   const [loading, setLoading] = useState<boolean>(true);
+  const [projectStatus, setProjectStatus] = useState<string>("");
 
   useEffect(() => {
     if (session === null) {
@@ -58,9 +59,24 @@ const Project = () => {
         setProject(parsedResponse?.data?.data);
 
         setDeployments(parsedResponse?.data?.data?.Deployment);
-        setLoading(false);
+        switch (parsedResponse?.data?.data?.Deployment[0]?.status) {
+          case "QUEUED":
+            setProjectStatus("In Queue");
+            break;
+          case "IN_PROGRESS":
+            setProjectStatus("In Progress");
+            break;
+          case "READY":
+            setProjectStatus("Ready");
+            break;
+          case "FAILED":
+            setProjectStatus("Failed");
+            break;
+        }
       } catch (err) {
         console.log("Error: ", err);
+      } finally {
+        setLoading(false);
       }
     }
     fetchProjectDetails();
@@ -81,6 +97,7 @@ const Project = () => {
               projectId={projectId}
               project={project}
               setLoading={(e: boolean) => setLoading(e)}
+              projectStatus={projectStatus}
             />
           )}
         </>

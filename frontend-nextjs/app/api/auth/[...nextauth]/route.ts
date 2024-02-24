@@ -1,9 +1,9 @@
-import NextAuth from "next-auth";
+import NextAuth, { AuthOptions } from "next-auth";
 import GithubProvider from "next-auth/providers/github";
 import GoogleProvider from "next-auth/providers/google";
 import prismaAdapter, { prisma } from "@/app/prismaAdapter";
 
-export const authOptions = {
+export const authOptions: AuthOptions = {
   secret: process.env.NEXTAUTH_SECRET as string,
   adapter: prismaAdapter,
   callbacks: {
@@ -18,7 +18,7 @@ export const authOptions = {
       if (getToken) {
         accessToken = getToken.access_token!;
       }
-
+      console.log(accessToken, "accestoken");
       session.user.token = accessToken;
       return session;
     },
@@ -30,8 +30,27 @@ export const authOptions = {
     },
 
     async signIn({ user, account, profile, email, credentials }) {
-      user.token = account.token;
+      console.log(user, "user", account, "account");
+      user.token = account?.access_token;
+
+      await prisma.account.update({
+        where: {
+          provider_providerAccountId: {
+            providerAccountId: account?.providerAccountId,
+            provider: account?.provider,
+          },
+        },
+        data: {
+          access_token: account?.access_token,
+        },
+      });
       return user;
+    },
+
+    signOut: async (req, res) => {
+      console.log("User signed out");
+
+      return "/custom-sign-out-page";
     },
   },
 

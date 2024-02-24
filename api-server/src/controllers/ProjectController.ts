@@ -58,7 +58,7 @@ class ProjectController {
     res: Response,
   ): Promise<void> => {
     const user = req.user;
-    const deploymentId = req.params.id as string;
+    const deploymentId = req.params.id;
 
     try {
       const paramsSchema = z.object({

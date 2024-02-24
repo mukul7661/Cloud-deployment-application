@@ -1,47 +1,62 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
 import { useSession, signIn, signOut } from "next-auth/react";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { serialize } from "cookie";
+import { getServerSession } from "next-auth";
+import { authOptions } from "./api/auth/[...nextauth]/route";
 
-// async function getServerSideProps() {
-//   const session = await getServerSession(authOptions);
+async function fetchServerSession() {
+  const session = await getServerSession(authOptions);
 
-//   return {
-//     props: {
-//       session,
-//     },
-//   };
-// }
+  return {
+    props: {
+      session,
+    },
+  };
+}
 
 export default function Home() {
   const router = useRouter();
   const { data: session, status } = useSession();
-  console.log(session);
-  if (session !== null) {
-    if (session?.user?.token) {
-      console.log("setting cookie");
-      const cookieValue = serialize("access-token", session?.user?.token, {
-        httpOnly: true,
-        maxAge: 30 * 60 * 60 * 24,
-        path: "/",
-      });
+  const [loading, setLoading] = useState<boolean>(true);
 
-      document.cookie = cookieValue;
+  useEffect(() => {
+    // const serverSession = fetchServerSession();
+    // console.log(serverSession, "server");
+
+    if (session !== null) {
+      if (session?.user?.token) {
+        console.log("setting cookie");
+        const cookieValue = serialize("access-token", session?.user?.token, {
+          // httpOnly: true,
+          maxAge: 30 * 60 * 60 * 24,
+          path: "/",
+        });
+
+        document.cookie = cookieValue;
+      }
+      setLoading(true);
+      router.push("/projects");
+      setLoading(false);
     }
-    // router.push("/projects");
-  }
-
-  console.log(session, status);
+    setLoading(false);
+  }, [session, router]);
 
   return (
-    <div>
-      Using kafka, AWS ECS, redis, postgres, docker under the hood for seamless
-      deployment experience
-    </div>
+    <>
+      {(status === "loading" || loading) && (
+        <div className="loader-container">
+          <div className="loader"></div>
+        </div>
+      )}
+      {!loading && !(status === "loading") && (
+        <>
+          Using kafka, AWS ECS, redis, postgres, docker under the hood for
+          seamless deployment experience
+        </>
+      )}
+    </>
   );
 }

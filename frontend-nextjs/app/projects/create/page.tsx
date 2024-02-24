@@ -78,7 +78,6 @@ export default function CardWithForm() {
 
   const router = useRouter();
 
-  console.log(session?.data?.user?.email);
   const [repos, setRepos] = useState<z.infer<typeof Repo>[] | null>(null);
   const [repoURL, setRepoURL] = useState<string>("");
   const [projectName, setProjectName] = useState<string>("");

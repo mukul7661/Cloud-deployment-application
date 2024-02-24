@@ -26,6 +26,7 @@ const Projects = () => {
     z.infer<typeof ProjectSchema>[]
   >([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [projectStatus, setProjectStatus] = useState<string>("");
 
   const filterProjects = (project: z.infer<typeof ProjectSchema>) => {
     return (
@@ -52,6 +53,20 @@ const Projects = () => {
 
         if (parsedResponse?.success) {
           setProjectList(parsedResponse?.data?.data);
+          switch (parsedResponse?.data?.data[0]?.Deployment[0]?.status) {
+            case "QUEUED":
+              setProjectStatus("In Queue");
+              break;
+            case "IN_PROGRESS":
+              setProjectStatus("In Progress");
+              break;
+            case "READY":
+              setProjectStatus("Ready");
+              break;
+            case "FAILED":
+              setProjectStatus("Failed");
+              break;
+          }
         } else {
           console.error("Error: ", parsedResponse?.error);
         }
@@ -100,23 +115,8 @@ const Projects = () => {
                 key={project?.id}
                 className="hover:ring-1 bg-[#151313] cursor-pointer hover:ring-white "
               >
-                {/* <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-2xl font-medium">
-                    {project?.name}
-                  </CardTitle>
-                  <Button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      router.push(
-                        `/projects/${project?.id}/${project?.Deployment[0]?.id}`
-                      );
-                    }}
-                  >
-                    See Logs
-                  </Button>
-                </CardHeader> */}
-                <CardContent className="flex p-10">
-                  <div className="flex-col gap-y-4">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <div className="flex flex-col">
                     <CardTitle className="text-2xl font-medium">
                       {project?.name}
                     </CardTitle>
@@ -130,10 +130,23 @@ const Projects = () => {
                       <Link className="w-[14px]" />
                       {`${project?.subDomain}.localhost:8000`}
                     </a>
-
+                  </div>
+                  <Button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      router.push(
+                        `/projects/${project?.id}/${project?.Deployment[0]?.id}`
+                      );
+                    }}
+                  >
+                    See Logs
+                  </Button>
+                </CardHeader>
+                <CardContent className="flex items-center justify-between mt-4">
+                  <div className="flex-col gap-y-4">
                     <a
                       href={project?.gitURL.replace("git://", "https://")}
-                      className="flex gap-2 text-[14px] hover:underline  align-middle mb-2"
+                      className="flex gap-2 text-[14px] hover:underline  align-middle mb-2 border-2 rounded-full py-1 px-2"
                       target="_blank"
                       rel="noopener noreferrer"
                       onClick={(e) => e.stopPropagation()}
@@ -148,35 +161,16 @@ const Projects = () => {
                       )}`}
                     </p>
                   </div>
-                  <div className="flex-col">
-                    <Button
-                      onClick={(e) => {
-                        setLoading(true);
-                        e.stopPropagation();
-                        router.push(
-                          `/projects/${project?.id}/${project?.Deployment[0]?.id}`
-                        );
-                      }}
-                      className="ml-5 mt-5"
-                    >
-                      See Logs
-                    </Button>
-                    <Button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                      }}
-                      className="ml-5 mt-5"
-                      // disabled
-                    >
-                      {project?.Deployment[0]?.status}
-                    </Button>
-                    {/* <Input
-                      onClick={(e) => e.stopPropagation()}
-                      className="w-[95px] ml-5 mt-5 h-10 px-4 py-2"
-                      disabled
-                      value="hh"
-                    /> */}
-                  </div>
+                  <Button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                    }}
+                    className=""
+                    variant={"secondary"}
+                  >
+                    <span className="text-xs mr-1">Status:</span>
+                    <span>{projectStatus}</span>
+                  </Button>
                 </CardContent>
               </Card>
             ))}
