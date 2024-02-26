@@ -4,15 +4,16 @@ import PrismaManager from "../services/PrismaManager";
 import { CustomRequest, UserDTO } from "../dto/project.dto";
 
 const authMiddleware = async (
-  req: CustomRequest,
+  req,
   res: Response,
   next: NextFunction,
 ): Promise<void> => {
   try {
+    console.log(req.body.isGuest);
     const isGuest = req.cookies["is-guest"];
 
     let accessToken = "";
-    if (isGuest === "true") {
+    if (req.body.isGuest) {
       accessToken = "";
       const guestUser = await createGuestUser();
       const user = {
@@ -21,9 +22,9 @@ const authMiddleware = async (
         accessToken: "guest",
       };
 
-      const parserUser = UserDTO.parse(user);
-
-      req.user = parserUser;
+      req.user = user;
+      // const parserUser = UserDTO.parse(user);
+      // req.user = parserUser;
 
       return next();
     }
@@ -36,7 +37,7 @@ const authMiddleware = async (
       return;
     }
 
-    const prismaManager = new PrismaManager();
+    const prismaManager = PrismaManager.getInstance();
     const prisma = prismaManager.getPrisma();
 
     const account = await prisma.account.findUnique({
@@ -58,8 +59,9 @@ const authMiddleware = async (
       return;
     }
 
-    const parserUser = UserDTO.parse(user);
-    req.user = parserUser;
+    req.user = user;
+    // const parsedUser = UserDTO.parse(user);
+    // req.user = parsedUser;
 
     next();
   } catch (error) {

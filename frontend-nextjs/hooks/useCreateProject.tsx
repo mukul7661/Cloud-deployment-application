@@ -17,7 +17,7 @@ const useCreateProject = () => {
         },
         { withCredentials: true }
       );
-      console.log(res);
+      // console.log(res);
       setData(res);
     } catch (error) {
       setError(error);

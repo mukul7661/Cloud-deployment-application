@@ -31,8 +31,8 @@ const Deployment = () => {
 
   const [logs, setLogs] = useState<string[]>(["Logs will appear here soon!"]);
   const [deploymentStatus, setDeploymentStatus] = useState("");
-  const [loading, setLoading] = useState<boolean>(true);
   const [subDomain, setSubDomain] = useState("");
+  const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
     async function fetchProjectDetails() {
@@ -53,9 +53,11 @@ const Deployment = () => {
           return;
         }
 
+        // console.log(parsedResponse);
         setSubDomain(
           `http://${parsedResponse?.data?.data?.subDomain}.mukulyadav.com:8000`
         );
+
         setLogs(parsedResponse?.data?.data?.logs);
         switch (parsedResponse?.data?.data?.status) {
           case "QUEUED":

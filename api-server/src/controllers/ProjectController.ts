@@ -1,7 +1,7 @@
-import { Response } from 'express';
-import ProjectService from '../services/ProjectService';
-import { z } from 'zod';
-import { CreateProjectRequestDTO, CustomRequest } from '../dto/project.dto';
+import { Response } from "express";
+import ProjectService from "../services/ProjectService";
+import { z } from "zod";
+import { CreateProjectRequestDTO, CustomRequest } from "../dto/project.dto";
 
 class ProjectController {
   private projectService: ProjectService;
@@ -16,8 +16,8 @@ class ProjectController {
       const projects = await this.projectService.getAllProjects(user);
       res.json(projects);
     } catch (err) {
-      console.error('Error in getAllProjects', err);
-      res.status(500).json({ error: 'Internal Server Error' });
+      console.error("Error in getAllProjects", err);
+      res.status(500).json({ error: "Internal Server Error" });
     }
   };
 
@@ -33,8 +33,8 @@ class ProjectController {
       const project = await this.projectService.getProjectById(projectId, user);
       res.json(project);
     } catch (err) {
-      console.error('Error in getProjectById', err);
-      res.status(500).json({ error: 'Internal Server Error' });
+      console.error("Error in getProjectById", err);
+      res.status(500).json({ error: "Internal Server Error" });
     }
   };
 
@@ -48,8 +48,8 @@ class ProjectController {
         await this.projectService.fetchGithubRepos(user);
       res.status(200).json({ userReposFiltered });
     } catch (err) {
-      console.error('Error in fetchGithubRepos', err);
-      res.status(500).json({ error: 'Internal Server Error' });
+      console.error("Error in fetchGithubRepos", err);
+      res.status(500).json({ error: "Internal Server Error" });
     }
   };
 
@@ -66,11 +66,12 @@ class ProjectController {
       });
       const { id } = paramsSchema.parse(req.params);
 
-      const [logs, status] = await this.projectService.fetchDeploymentLogs(id);
-      res.json({ logs, status });
+      const [logs, status, subDomain] =
+        await this.projectService.fetchDeploymentLogs(id);
+      res.json({ logs, status, subDomain });
     } catch (err) {
-      console.error('Error in fetchDeploymentLogs', err);
-      res.status(500).json({ error: 'Internal Server Error' });
+      console.error("Error in fetchDeploymentLogs", err);
+      res.status(500).json({ error: "Internal Server Error" });
     }
   };
 
@@ -86,8 +87,8 @@ class ProjectController {
       );
       res.json({ project });
     } catch (err) {
-      console.error('Error in createProject', err);
-      res.status(500).json({ error: 'Internal Server Error' });
+      console.error("Error in createProject", err);
+      res.status(500).json({ error: "Internal Server Error" });
     }
   };
 
@@ -95,6 +96,7 @@ class ProjectController {
     try {
       const bodySchema = z.object({
         projectId: z.string(),
+        isGuest: z.boolean().optional(),
       });
       const { projectId } = bodySchema.parse(req.body);
 
@@ -104,17 +106,17 @@ class ProjectController {
         user,
       );
       if (!deployment) {
-        res.status(404).json({ error: 'Project not found' });
+        res.status(404).json({ error: "Project not found" });
         return;
       }
 
       res.json({
-        status: 'queued',
+        status: "queued",
         data: { deploymentId: deployment.id },
       });
     } catch (err) {
-      console.error('Error in deployProject', err);
-      res.status(500).json({ error: 'Internal Server Error' });
+      console.error("Error in deployProject", err);
+      res.status(500).json({ error: "Internal Server Error" });
     }
   };
 }

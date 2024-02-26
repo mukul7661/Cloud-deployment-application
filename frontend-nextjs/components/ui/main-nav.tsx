@@ -19,36 +19,53 @@ export function MainNav({
       className={cn("flex items-center space-x-4 lg:space-x-6", className)}
       {...props}
     >
-      <Link
-        href="/projects"
-        className={cn(
-          "text-sm font-medium transition-colors hover:text-primary",
-          path === "/projects" ? "text-primary" : "text-muted-foreground"
-        )}
-      >
-        Logo
-      </Link>
-      <Link
-        href="/projects/create"
-        className={cn(
-          "text-sm font-medium transition-colors hover:text-primary",
-          path === "/projects/create" ? "text-primary" : "text-muted-foreground"
-        )}
-      >
-        Create project
-      </Link>
+      {session?.data && (
+        <>
+          <Link
+            href="/projects"
+            className={cn(
+              "text-sm font-medium transition-colors hover:text-primary",
+              path === "/projects" ? "text-primary" : "text-muted-foreground"
+            )}
+          >
+            Projects
+          </Link>
+          <Link
+            href="/projects/create"
+            className={cn(
+              "text-sm font-medium transition-colors hover:text-primary",
+              path === "/projects/create"
+                ? "text-primary"
+                : "text-muted-foreground"
+            )}
+          >
+            Create project
+          </Link>
+        </>
+      )}
       {!session?.data && (
-        <Link
-          href="/projects/guest"
-          className={cn(
-            "text-sm font-medium transition-colors hover:text-primary",
-            path === "/projects/guest"
-              ? "text-primary"
-              : "text-muted-foreground"
-          )}
-        >
-          Deploy as guest
-        </Link>
+        <>
+          <Link
+            href="/"
+            className={cn(
+              "text-sm font-medium transition-colors hover:text-primary",
+              path === "/" ? "text-primary" : "text-muted-foreground"
+            )}
+          >
+            Home
+          </Link>
+          <Link
+            href="/projects/guest"
+            className={cn(
+              "text-sm font-medium transition-colors hover:text-primary",
+              path === "/projects/guest"
+                ? "text-primary"
+                : "text-muted-foreground"
+            )}
+          >
+            Deploy as guest
+          </Link>
+        </>
       )}
     </nav>
     // <Tabs defaultValue="projects">

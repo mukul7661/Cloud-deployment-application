@@ -1,14 +1,14 @@
-import { Kafka, Consumer, EachMessagePayload, EachBatchPayload } from 'kafkajs';
-import fs from 'fs';
-import path from 'path';
-import { v4 as uuidv4 } from 'uuid';
-import ClickHouseClient from './ClickHouseClient';
-import PrismaManager from './PrismaManager';
+import { Kafka, Consumer, EachMessagePayload, EachBatchPayload } from "kafkajs";
+import fs from "fs";
+import path from "path";
+import { v4 as uuidv4 } from "uuid";
+import ClickHouseClient from "./ClickHouseClient";
+import PrismaManager from "./PrismaManager";
 
 class KafkaManager {
   private kafka: Kafka;
   private consumer: Consumer;
-  private prisma: ReturnType<PrismaManager['getPrisma']>;
+  private prisma: ReturnType<PrismaManager["getPrisma"]>;
   private isClickhouseEnabled: boolean;
   private clickhouseClient: ClickHouseClient | null = null;
   private isInitialized: boolean;
@@ -18,20 +18,20 @@ class KafkaManager {
       clientId: `api-server`,
       brokers: [`${process.env.KAFKA_BROKER}`],
       ssl: {
-        ca: [fs.readFileSync(path.join(__dirname, 'kafka.pem'), 'utf-8')],
+        ca: [fs.readFileSync(path.join(__dirname, "kafka.pem"), "utf-8")],
       },
       sasl: {
         username: process.env.KAFKA_USERNAME as string,
         password: process.env.KAFKA_PASSWORD as string,
-        mechanism: 'plain',
+        mechanism: "plain",
       },
     });
 
     this.consumer = this.kafka.consumer({
-      groupId: 'api-server-logs-consumer',
+      groupId: "api-server-logs-consumer",
     });
-    this.prisma = new PrismaManager().getPrisma();
-    this.isClickhouseEnabled = process.env.CLICKHOUSE_ENABLED === 'true';
+    this.prisma = PrismaManager.getInstance().getPrisma();
+    this.isClickhouseEnabled = process.env.CLICKHOUSE_ENABLED === "true";
     this.isInitialized = false;
 
     if (this.isClickhouseEnabled) {
@@ -42,13 +42,13 @@ class KafkaManager {
   public async initKafkaConsumer(): Promise<void> {
     try {
       if (this.isInitialized) {
-        console.log('Kafka consumer already initialized.');
+        console.log("Kafka consumer already initialized.");
         return;
       }
 
       await this.consumer.connect();
       await this.consumer.subscribe({
-        topics: ['container-logs'],
+        topics: ["container-logs"],
         fromBeginning: true,
       });
 
@@ -58,7 +58,7 @@ class KafkaManager {
 
       this.isInitialized = true;
     } catch (err) {
-      console.log('Error initializing Kafka consumer: ', err);
+      console.log("Error initializing Kafka consumer: ", err);
     }
   }
 
@@ -79,11 +79,11 @@ class KafkaManager {
         try {
           if (this.isClickhouseEnabled) {
             await this.clickhouseClient?.client.insert({
-              table: 'log_events',
+              table: "log_events",
               values: [
                 { event_id: uuidv4(), deployment_id: DEPLOYEMENT_ID, log },
               ],
-              format: 'JSONEachRow',
+              format: "JSONEachRow",
             });
           } else {
             await this.prisma.eventLog.create({
@@ -101,7 +101,7 @@ class KafkaManager {
         }
       }
     } catch (error) {
-      console.log('Error handling batch:', error);
+      console.log("Error handling batch:", error);
     }
   }
 }

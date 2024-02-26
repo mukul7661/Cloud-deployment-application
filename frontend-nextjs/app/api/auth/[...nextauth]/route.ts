@@ -31,14 +31,14 @@ export const authOptions: AuthOptions = {
 
     async signIn({ user, account, profile, email, credentials }) {
       console.log(user, "user", account, "account");
-      user.token = account?.access_token;
+      // user.token = account?.access_token;
 
-      await prisma.account.update({
+      await prisma.account.updateMany({
         where: {
-          provider_providerAccountId: {
-            providerAccountId: account?.providerAccountId,
-            provider: account?.provider,
-          },
+          // provider_providerAccountId: {
+          providerAccountId: account?.providerAccountId,
+          provider: account?.provider,
+          // },
         },
         data: {
           access_token: account?.access_token,
@@ -47,11 +47,11 @@ export const authOptions: AuthOptions = {
       return user;
     },
 
-    signOut: async (req, res) => {
-      console.log("User signed out");
+    // signOut: async (req, res) => {
+    //   console.log("User signed out");
 
-      return "/custom-sign-out-page";
-    },
+    //   return "/custom-sign-out-page";
+    // },
   },
 
   providers: [
@@ -59,10 +59,10 @@ export const authOptions: AuthOptions = {
       clientId: process.env.GITHUB_ID as string,
       clientSecret: process.env.GITHUB_SECRET as string,
     }),
-    GoogleProvider({
-      clientId: process.env.GOOGLE_ID as string,
-      clientSecret: process.env.GOOGLE_SECRET as string,
-    }),
+    // GoogleProvider({
+    //   clientId: process.env.GOOGLE_ID as string,
+    //   clientSecret: process.env.GOOGLE_SECRET as string,
+    // }),
   ],
 };
 

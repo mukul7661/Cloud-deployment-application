@@ -93,14 +93,14 @@ const TabBar = ({
                 {project?.name} {id}
               </CardTitle>
               <a
-                href={`http://${project?.subDomain}.localhost:8000`}
+                href={`http://${project?.subDomain}.mukulyadav.com:8000`}
                 className="flex gap-2 text-[14px] hover:underline  align-middle mb-2"
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={(e) => e.stopPropagation()}
               >
                 <Link className="w-[14px]" />
-                {`${project?.subDomain}.localhost:8000`}
+                {`${project?.subDomain}.mukulyadav.com:8000`}
               </a>
             </div>
             <Button className="ml-20" onClick={handleCreateDeployment}>
