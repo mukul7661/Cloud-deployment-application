@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -27,9 +27,9 @@ import {
 } from "@/components/ui/dialog";
 import { authInstance } from "@/lib/authInstance";
 import { X } from "lucide-react";
-import useCreateDeployment from "@/hooks/useCreateDeployment";
 import { z } from "zod";
 import { ProjectSchema, Repo } from "@/types/zod-types";
+import useDeployProject from "@/hooks/useDeployProject";
 
 const RepoCardContainer = styled.div`
   display: flex;
@@ -73,7 +73,7 @@ const FetchGitUrlsResponseSchema = z.object({
   }),
 });
 
-export default function CardWithForm() {
+export default function CreateProject() {
   const { data: session, status } = useSession();
 
   const router = useRouter();
@@ -84,12 +84,12 @@ export default function CardWithForm() {
   const [showConfigModal, setShowConfigModal] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(true);
-
   const {
-    createDeployment,
-
-    data: deploymentData,
-  } = useCreateDeployment();
+    deployProject,
+    loading: createDeploymentLoading,
+    error: createDeploymentError,
+    id,
+  } = useDeployProject();
 
   const handleClickDeploy = async () => {
     if (projectName === "") {
@@ -102,7 +102,6 @@ export default function CardWithForm() {
         {
           gitURL: repoURL,
           name: projectName,
-          email: session?.data?.user?.email,
         },
         { withCredentials: true }
       );
@@ -115,24 +114,9 @@ export default function CardWithForm() {
       return;
     }
 
-    console.log(parsedData?.data?.data?.project?.id);
-
     const projectId = parsedData?.data?.data?.project?.id;
 
-    const res: z.infer<typeof CreateDeploymentResponseSchema> =
-      await authInstance.post(
-        `${process.env.NEXT_PUBLIC_API_SERVER_URL}/api/project/deploy`,
-        {
-          projectId,
-        },
-        { withCredentials: true }
-      );
-    // await createDeployment(projectId);
-    // // console.log(res);
-    // console.log(deploymentData, "deploumentdata");
-    // const deploymentId = deploymentData?.data?.data?.deploymentId;
-    const deploymentId = res?.data?.data?.deploymentId;
-    router.push(`/projects/${projectId}/${deploymentId}`);
+    await deployProject(projectId);
   };
 
   function handleImportClick(url: string) {
@@ -169,14 +153,19 @@ export default function CardWithForm() {
             return;
           }
           setRepos(parsedResponse?.data?.data?.userReposFiltered);
-          setLoading(false);
         }
       } catch (err) {
         console.log("Error: ", err);
+      } finally {
+        setLoading(false);
       }
     }
     fetchGiturls();
   }, [session, router]);
+
+  useEffect(() => {
+    setLoading(createDeploymentLoading);
+  }, [createDeploymentLoading]);
 
   return (
     <>

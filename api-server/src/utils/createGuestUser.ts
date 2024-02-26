@@ -15,7 +15,6 @@ async function createGuestUser() {
     },
   });
 
-  console.log(user);
   return user;
 }
 

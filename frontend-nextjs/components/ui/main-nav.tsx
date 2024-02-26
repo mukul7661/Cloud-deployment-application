@@ -4,12 +4,14 @@ import { cn } from "@/lib/utils";
 import { useSession } from "next-auth/react";
 import { Tabs, TabsList, TabsTrigger } from "./tabs";
 import { useState } from "react";
+import { usePathname } from "next/navigation";
 
 export function MainNav({
   className,
   ...props
 }: React.HTMLAttributes<HTMLElement>) {
   const session = useSession();
+  const path = usePathname();
 
   const [navbarValue, setNavbarValue] = useState("projects");
   return (
@@ -21,9 +23,8 @@ export function MainNav({
         href="/projects"
         className={cn(
           "text-sm font-medium transition-colors hover:text-primary",
-          navbarValue === "projects" ? "text-primary" : "text-muted-foreground"
+          path === "/projects" ? "text-primary" : "text-muted-foreground"
         )}
-        onClick={() => setNavbarValue("projects")}
       >
         Logo
       </Link>
@@ -31,9 +32,8 @@ export function MainNav({
         href="/projects/create"
         className={cn(
           "text-sm font-medium transition-colors hover:text-primary",
-          navbarValue === "create" ? "text-primary" : "text-muted-foreground"
+          path === "/projects/create" ? "text-primary" : "text-muted-foreground"
         )}
-        onClick={() => setNavbarValue("create")}
       >
         Create project
       </Link>
@@ -42,9 +42,10 @@ export function MainNav({
           href="/projects/guest"
           className={cn(
             "text-sm font-medium transition-colors hover:text-primary",
-            navbarValue === "guest" ? "text-primary" : "text-muted-foreground"
+            path === "/projects/guest"
+              ? "text-primary"
+              : "text-muted-foreground"
           )}
-          onClick={() => setNavbarValue("guest")}
         >
           Deploy as guest
         </Link>

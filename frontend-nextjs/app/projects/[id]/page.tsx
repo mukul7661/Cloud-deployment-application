@@ -55,7 +55,6 @@ const Project = () => {
           console.error("Error: ", parsedResponse?.error);
           return;
         }
-        console.log(res?.data);
         setProject(parsedResponse?.data?.data);
 
         setDeployments(parsedResponse?.data?.data?.Deployment);

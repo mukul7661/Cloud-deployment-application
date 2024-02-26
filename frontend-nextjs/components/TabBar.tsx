@@ -14,12 +14,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 import styled from "styled-components";
 import { useSession } from "next-auth/react";
 import { formattedDate } from "@/utils/formatDate";
-import useCreateDeployment from "@/hooks/useCreateDeployment";
+import useDeployProject from "@/hooks/useDeployProject";
 import { authInstance } from "@/lib/authInstance";
 import { Github, Link } from "lucide-react";
 import { z } from "zod";
 import { DeploymentSchema, ProjectSchema } from "@/types/zod-types";
-import React, { Dispatch, SetStateAction } from "react";
+import React, { Dispatch, SetStateAction, useEffect } from "react";
 
 const CardContainer = styled.div`
   display: flex;
@@ -65,29 +65,15 @@ const TabBar = ({
     router.push("/");
   }
 
-  const {
-    createDeployment,
-    loading,
-    data: deploymentData,
-  } = useCreateDeployment();
+  const { deployProject, loading, error, id } = useDeployProject();
 
   const handleCreateDeployment = async () => {
-    setLoading(true);
-    const res = await authInstance.post(
-      `${process.env.NEXT_PUBLIC_API_SERVER_URL}/api/project/deploy`,
-      {
-        projectId,
-      },
-      { withCredentials: true }
-    );
-    // await createDeployment(projectId);
-    // // console.log(res);
-    // console.log(deploymentData, "deploumentdata");
-    // const deploymentId = deploymentData?.data?.data?.deploymentId;
-    const deploymentId = res?.data?.data?.deploymentId;
-    router.push(`/projects/${projectId}/${deploymentId}`);
-    setLoading(false);
+    await deployProject(projectId);
   };
+
+  useEffect(() => {
+    setLoading(loading);
+  }, [loading, setLoading]);
 
   return (
     <Tabs defaultValue="overview" className="space-y-4">
@@ -104,7 +90,7 @@ const TabBar = ({
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <div className="flex flex-col">
               <CardTitle className="text-2xl font-medium">
-                {project?.name}
+                {project?.name} {id}
               </CardTitle>
               <a
                 href={`http://${project?.subDomain}.localhost:8000`}
