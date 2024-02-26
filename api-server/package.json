@@ -9,7 +9,7 @@
     "format": "prettier --write 'src/**/*.ts'",
     "dev": "nodemon dist/index.js",
     "start": "node src/index.js",
-    "build": "tsc"
+    "build": "tsc -b"
   },
   "author": "",
   "license": "ISC",

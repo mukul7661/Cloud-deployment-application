@@ -1,7 +1,7 @@
-import { NextFunction, Response } from 'express';
-import { createGuestUser } from '../utils/createGuestUser';
-import PrismaManager from '../services/PrismaManager';
-import { CustomRequest, UserDTO } from '../dto/project.dto';
+import { NextFunction, Response } from "express";
+import { createGuestUser } from "../utils/createGuestUser";
+import PrismaManager from "../services/PrismaManager";
+import { CustomRequest, UserDTO } from "../dto/project.dto";
 
 const authMiddleware = async (
   req: CustomRequest,
@@ -9,16 +9,16 @@ const authMiddleware = async (
   next: NextFunction,
 ): Promise<void> => {
   try {
-    const isGuest = req.cookies['is-guest'];
+    const isGuest = req.cookies["is-guest"];
 
-    let accessToken = '';
-    if (isGuest === 'true') {
-      accessToken = '';
+    let accessToken = "";
+    if (isGuest === "true") {
+      accessToken = "";
       const guestUser = await createGuestUser();
       const user = {
         email: guestUser?.email,
         userId: guestUser?.id,
-        accessToken: 'guest',
+        accessToken: "guest",
       };
 
       const parserUser = UserDTO.parse(user);
@@ -28,11 +28,11 @@ const authMiddleware = async (
       return next();
     }
 
-    accessToken = req.cookies['access-token'];
+    accessToken = req.cookies["access-token"];
     if (!accessToken) {
       res
         .status(401)
-        .json({ error: 'Unauthorized - No access token provided' });
+        .json({ error: "Unauthorized - No access token provided" });
       return;
     }
 
@@ -54,7 +54,7 @@ const authMiddleware = async (
       userId: account?.userId,
     };
     if (!user) {
-      res.status(401).json({ error: 'Unauthorized - User not found' });
+      res.status(401).json({ error: "Unauthorized - User not found" });
       return;
     }
 
@@ -64,7 +64,7 @@ const authMiddleware = async (
     next();
   } catch (error) {
     console.error(error);
-    res.status(401).json({ error: 'Unauthorized - Invalid access token' });
+    res.status(401).json({ error: "Unauthorized - Invalid access token" });
     return;
   }
 };
