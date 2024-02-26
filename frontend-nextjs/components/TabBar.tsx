@@ -13,6 +13,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 
 import styled from "styled-components";
 import { useSession } from "next-auth/react";
+import { formattedDate } from "@/utils/formatDate";
+import useDeployProject from "@/hooks/useDeployProject";
+import { authInstance } from "@/lib/authInstance";
+import { Github, Link } from "lucide-react";
+import { z } from "zod";
+import { DeploymentSchema, ProjectSchema } from "@/types/zod-types";
+import React, { Dispatch, SetStateAction, useEffect } from "react";
 
 const CardContainer = styled.div`
   display: flex;
@@ -36,14 +43,38 @@ const CardItem = styled.div`
   }
 `;
 
-const TabBar = ({ deployments, projectId }) => {
+const TabBarPropTypes = z.object({
+  deployments: z.array(DeploymentSchema),
+  projectId: z.string(),
+  project: ProjectSchema,
+  // setLoading: Dispatch<SetStateAction<boolean>>,
+  setLoading: z.function().args(z.boolean()),
+  projectStatus: z.string(),
+});
+
+const TabBar = ({
+  deployments,
+  projectId,
+  project,
+  setLoading,
+  projectStatus,
+}: z.infer<typeof TabBarPropTypes>) => {
   const router = useRouter();
   const session = useSession();
   if (session?.data === null) {
     router.push("/");
   }
 
-  console.log(deployments);
+  const { deployProject, loading, error, id } = useDeployProject();
+
+  const handleCreateDeployment = async () => {
+    await deployProject(projectId);
+  };
+
+  useEffect(() => {
+    setLoading(loading);
+  }, [loading, setLoading]);
+
   return (
     <Tabs defaultValue="overview" className="space-y-4">
       <TabsList className="w-full">
@@ -54,8 +85,72 @@ const TabBar = ({ deployments, projectId }) => {
       <TabsContent value="overview" className="space-y-4">
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4"></div>
       </TabsContent>
+      <TabsContent value="overview" className="space-y-4">
+        <Card className=" bg-[#151313] w-[800px] m-auto">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <div className="flex flex-col">
+              <CardTitle className="text-2xl font-medium">
+                {project?.name} {id}
+              </CardTitle>
+              <a
+                href={`http://${project?.subDomain}.localhost:8000`}
+                className="flex gap-2 text-[14px] hover:underline  align-middle mb-2"
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <Link className="w-[14px]" />
+                {`${project?.subDomain}.localhost:8000`}
+              </a>
+            </div>
+            <Button className="ml-20" onClick={handleCreateDeployment}>
+              Create deployment
+            </Button>
+
+            <Button
+              onClick={(e) =>
+                router.push(
+                  `/projects/${project?.id}/${project?.Deployment[0]?.id}`
+                )
+              }
+            >
+              See Logs
+            </Button>
+          </CardHeader>
+          <CardContent className="flex items-center justify-between mt-4">
+            <div className="flex-col gap-y-4">
+              <a
+                href={project?.gitURL.replace("git://", "https://")}
+                className="flex gap-2 text-[14px] hover:underline  align-middle mb-2 border-2 rounded-full py-1 px-2"
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <Github className="w-[14px]" />
+                {project?.gitURL.slice(17).replace(/\.git$/, "")}
+              </a>
+
+              <p className="text-xs text-muted-foreground">
+                {`Last Updated at: ${formattedDate(
+                  project?.Deployment[0]?.createdAt
+                )}`}
+              </p>
+            </div>
+            <Button
+              onClick={(e) => {
+                e.stopPropagation();
+              }}
+              className=""
+              variant={"secondary"}
+            >
+              <span className="text-xs mr-1"> Current Status:</span>
+              <span>{projectStatus}</span>
+            </Button>
+          </CardContent>
+        </Card>
+      </TabsContent>
       <TabsContent value="deployments" className="space-y-4">
-        <Card className="w-[600px] m-auto mt-10 cursor-pointer">
+        <Card className="w-[600px] m-auto mt-10">
           <CardHeader>
             <CardTitle>Import your git repository</CardTitle>
             <CardDescription>
@@ -65,43 +160,19 @@ const TabBar = ({ deployments, projectId }) => {
           <CardContent>
             <CardContainer>
               {deployments?.map((deployment) => (
-                // <div key={deployment?.id}>{deployments?.id}</div>
                 <CardItem
                   key={deployment?.id}
-                  className="flex flex-row justify-around items-center"
+                  className="flex flex-row justify-around items-center cursor-pointer p-8"
                   onClick={() =>
                     router.push(`/projects/${projectId}/${deployment?.id}`)
                   }
                 >
                   <div>{deployment?.id}</div>
-                  <Button
-                    // onClick={() => handleImportClick(repo?.gitURL)}
-                    className="flex-end"
-                  >
-                    View logs
-                  </Button>
+                  <Button className="flex-end">View logs</Button>
                 </CardItem>
               ))}
-              {/* {repos?.map((repo) => (
-                  <CardItem
-                    key={repo?.name}
-                    className="flex flex-row justify-around items-center"
-                  >
-                    <div>{repo?.name}</div>
-                    <Button
-                      onClick={() => handleImportClick(repo?.gitURL)}
-                      className="flex-end"
-                    >
-                      Import
-                    </Button>
-                  </CardItem>
-                ))} */}
             </CardContainer>
           </CardContent>
-          {/* <CardFooter className="flex justify-between">
-        <Button variant="outline">Cancel</Button>
-        <Button>Deploy</Button>
-      </CardFooter> */}
         </Card>
       </TabsContent>
     </Tabs>

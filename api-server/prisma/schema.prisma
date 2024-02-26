@@ -23,7 +23,7 @@ model Account {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  // @@unique([provider, providerAccountId])
+  @@unique([provider, providerAccountId])
 }
 
 model Session {
@@ -71,18 +71,18 @@ model Project {
 }
 
 enum DeploymentStatus {
-  NOT_STARTED
   QUEUED
   IN_PROGRESS
   READY
-  FAIL
+  FAILED
 }
 
 model Deployment {
   id        String            @id @default(uuid())
   project   Project           @relation(fields: [projectId], references: [id])
   projectId String            @map("project_id")
-  status    DeploymentStatus @default(NOT_STARTED)
+  status    DeploymentStatus @default(QUEUED)
+  EventLog  EventLog[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -90,7 +90,8 @@ model Deployment {
 
 model EventLog {
   event_id      String     @id @default(uuid())
-  deployment_id String
+  deployment    Deployment   @relation(fields: [deployment_id], references: [id])
+  deployment_id String    
   log           String
   timestamp     DateTime   @default(now())
 }

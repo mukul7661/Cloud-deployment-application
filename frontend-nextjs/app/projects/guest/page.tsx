@@ -1,18 +1,12 @@
 "use client";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { io } from "socket.io-client";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Github } from "lucide-react";
-import { Fira_Code } from "next/font/google";
-import axios from "axios";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { serialize } from "cookie";
-
-const socket = io(`http://${process.env.NEXT_PUBLIC_API_SERVER_URL}:9002`);
-
-const firaCode = Fira_Code({ subsets: ["latin"] });
+import { authInstance } from "@/lib/authInstance";
 
 export default function GuestProject() {
   const { data: session, status } = useSession();
@@ -22,18 +16,8 @@ export default function GuestProject() {
   const router = useRouter();
 
   const [repoURL, setRepoURL] = useState<string>("");
-  const [projectName, setProjectName] = useState<string>("");
-
-  const [logs, setLogs] = useState<string[]>([]);
 
   const [loading, setLoading] = useState(false);
-
-  const [projectId, setProjectId] = useState<string | undefined>();
-  const [deployPreviewURL, setDeployPreviewURL] = useState<
-    string | undefined
-  >();
-
-  const logContainerRef = useRef<HTMLElement>(null);
 
   const isValidURL: [boolean, string | null] = useMemo(() => {
     if (!repoURL || repoURL.trim() === "") return [false, null];
@@ -45,12 +29,11 @@ export default function GuestProject() {
 
   const handleClickDeploy = useCallback(async () => {
     console.log(repoURL);
-    const { data } = await axios.post(
-      `http://${process.env.NEXT_PUBLIC_API_SERVER_URL}:9000/api/project/create`,
+    const { data } = await authInstance.post(
+      `${process.env.NEXT_PUBLIC_API_SERVER_URL}/api/project/create`,
       {
         gitURL: repoURL,
-        name: projectName,
-        // email: session?.data?.user?.email,
+        name: "guest-project",
       },
       { withCredentials: true }
     );
@@ -59,8 +42,8 @@ export default function GuestProject() {
 
     const projectId = data?.data?.project?.id;
 
-    const res = await axios.post(
-      `http://${process.env.NEXT_PUBLIC_API_SERVER_URL}:9000/api/project/deploy`,
+    const res = await authInstance.post(
+      `${process.env.NEXT_PUBLIC_API_SERVER_URL}/api/project/deploy`,
       {
         projectId,
       },
@@ -70,20 +53,11 @@ export default function GuestProject() {
 
     const deploymentId = res?.data?.data?.deploymentId;
     router.push(`/projects/${projectId}/${deploymentId}`);
-
-    // if (data && data.data) {
-    //   const { projectSlug, url } = data.data;
-    //   setProjectId(projectSlug);
-    //   setDeployPreviewURL(url);
-
-    //   console.log(`Subscribing to logs:${projectSlug}`);
-    //   socket.emit("subscribe", `logs:${projectSlug}`);
-    // }
-  }, [projectName, repoURL]);
+  }, [repoURL, router]);
 
   useEffect(() => {
     const cookieValue = serialize("is-guest", "true", {
-      // httpOnly: true,
+      httpOnly: true,
       maxAge: 30 * 60 * 60 * 24,
       path: "/",
     });
@@ -103,13 +77,6 @@ export default function GuestProject() {
           <Github className="text-5xl" />
           <Input
             disabled={loading}
-            value={projectName}
-            onChange={(e) => setProjectName(e.target.value)}
-            type="text"
-            placeholder="Project name"
-          />
-          <Input
-            disabled={loading}
             value={repoURL}
             onChange={(e) => setRepoURL(e.target.value)}
             type="url"
@@ -121,9 +88,9 @@ export default function GuestProject() {
           disabled={!isValidURL[0] || loading}
           className="w-full mt-3"
         >
-          {loading ? "In Progress" : "Deploy"}
+          Deploy
         </Button>
-        {deployPreviewURL && (
+        {/* {deployPreviewURL && (
           <div className="mt-2 bg-slate-900 py-4 px-2 rounded-lg">
             <p>
               Preview URL{" "}
@@ -136,21 +103,7 @@ export default function GuestProject() {
               </a>
             </p>
           </div>
-        )}
-        {logs.length > 0 && (
-          <div
-            className={`${firaCode.className} text-sm text-green-500 logs-container mt-5 border-green-500 border-2 rounded-lg p-4 h-[300px] overflow-y-auto`}
-          >
-            <pre className="flex flex-col gap-1">
-              {logs.map((log, i) => (
-                <code
-                  // ref={logs.length - 1 === i ? logContainerRef : undefined}
-                  key={i}
-                >{`> ${log}`}</code>
-              ))}
-            </pre>
-          </div>
-        )}
+        )} */}
       </div>
     </main>
   );

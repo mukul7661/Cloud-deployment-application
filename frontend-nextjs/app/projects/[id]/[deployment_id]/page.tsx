@@ -1,34 +1,42 @@
 "use client";
 
-import axios from "axios";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Fira_Code } from "next/font/google";
 import { useSession } from "next-auth/react";
 import { serialize } from "cookie";
+import { authInstance } from "@/lib/authInstance";
+import { z } from "zod";
+import { Button } from "@/components/ui/button";
 
 const firaCode = Fira_Code({ subsets: ["latin"] });
+
+const ResponseSchema = z.object({
+  data: z.object({
+    logs: z.array(z.string()),
+    status: z.string(),
+  }),
+});
 
 const Deployment = () => {
   const session = useSession();
 
   const router = useRouter();
 
-  // if (session?.data === null) {
-  //   router.push("/");
-  // }
   const path = usePathname();
   const pathArray = path.split("/");
   const deploymentId = pathArray[pathArray.length - 1];
   console.log(deploymentId, "deploymentId");
 
-  const [logs, setLogs] = useState([]);
+  const [logs, setLogs] = useState<string[]>(["Logs will appear here soon!"]);
+  const [deploymentStatus, setDeploymentStatus] = useState("");
+  const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
     async function fetchProjectDetails() {
       try {
-        const res = await axios.get(
-          `http://${process.env.NEXT_PUBLIC_API_SERVER_URL}:9000/api/project/logs/${deploymentId}`,
+        const res: z.infer<typeof ResponseSchema> = await authInstance.get(
+          `${process.env.NEXT_PUBLIC_API_SERVER_URL}/api/project/logs/${deploymentId}`,
           {
             headers: {
               "Content-Type": "application/json",
@@ -36,15 +44,32 @@ const Deployment = () => {
             withCredentials: true,
           }
         );
-        if (res?.data === "") {
-          // router.push("/");
-        }
-        console.log(res?.data?.logs);
-        setLogs(res?.data?.logs);
 
-        // setDeployments(res?.data?.Deployment);
+        const parsedResponse = ResponseSchema.safeParse(res);
+        if (!parsedResponse?.success) {
+          console.error("Error: ", parsedResponse?.error);
+          return;
+        }
+
+        setLogs(parsedResponse?.data?.data?.logs);
+        switch (parsedResponse?.data?.data?.status) {
+          case "QUEUED":
+            setDeploymentStatus("In Queue");
+            break;
+          case "IN_PROGRESS":
+            setDeploymentStatus("In Progress");
+            break;
+          case "READY":
+            setDeploymentStatus("Ready");
+            break;
+          case "FAILED":
+            setDeploymentStatus("Failed");
+            break;
+        }
       } catch (err) {
         console.log("Error: ", err);
+      } finally {
+        setLoading(false);
       }
     }
 
@@ -52,12 +77,12 @@ const Deployment = () => {
 
     const fetchLogsInterval = setInterval(() => {
       fetchProjectDetails();
-    }, 8000);
+    }, parseInt(process.env.NEXT_PUBLIC_LOG_REFRESH_TIME as string));
 
     return () => {
       clearInterval(fetchLogsInterval);
     };
-  }, []);
+  }, [deploymentId]);
 
   useEffect(() => {
     const cookieValue = serialize("is-guest", "true", {
@@ -65,9 +90,7 @@ const Deployment = () => {
       maxAge: 30 * 60 * 60 * 24,
       path: "/",
     });
-
     document.cookie = cookieValue;
-
     return () => {
       document.cookie =
         "is-guest=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
@@ -75,22 +98,33 @@ const Deployment = () => {
   }, []);
 
   return (
-    <div className="w-[900px] m-auto mt-20">
-      {logs?.length > 0 && (
-        <div
-          className={`${firaCode.className} text-sm text-green-500 logs-container mt-5 border-green-500 border-2 rounded-lg p-4 h-[500px] overflow-y-auto`}
-        >
-          <pre className="flex flex-col gap-1">
-            {logs.map((log, i) => (
-              <code
-                // ref={logs.length - 1 === i ? logContainerRef : undefined}
-                key={i}
-              >{`> ${log?.log}`}</code>
-            ))}
-          </pre>
+    <>
+      {loading && (
+        <div className="loader-container">
+          <div className="loader"></div>
         </div>
       )}
-    </div>
+      {!loading && (
+        <div className="flex flex-col items-center">
+          <Button className="mt-10 w-[300px]" variant={"secondary"}>
+            <span className=" mr-2">Status of this deplpoyment:</span>
+            <span>{deploymentStatus}</span>
+          </Button>
+          <div className="w-[900px] m-auto mt-10">
+            <div
+              className={`${firaCode.className} text-sm text-green-500 logs-container mt-5 border-green-500 border-2 rounded-lg p-4 h-[500px] overflow-y-auto`}
+            >
+              status: {deploymentStatus}
+              <pre className="flex flex-col gap-1">
+                {logs.map((log, i) => (
+                  <code key={i}>{`> ${log}`}</code>
+                ))}
+              </pre>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 };
 

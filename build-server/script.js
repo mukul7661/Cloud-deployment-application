@@ -4,7 +4,6 @@ const fs = require("fs");
 const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
 const mime = require("mime-types");
 const Redis = require("ioredis");
-// const { network } = require("./network");
 const { Kafka } = require("kafkajs");
 
 require("dotenv").config();
@@ -12,16 +11,6 @@ require("dotenv").config();
 const publisher = new Redis(process.env.AIVEN_REDIS_URL);
 
 const isKafkaEnabled = process.env.KAFKA_ENABLED === "true";
-
-// console.log(network);
-
-// const s3Client = new S3Client({
-//   region: network.AWS_REGION,
-//   credentials: {
-//     accessKeyId: network.AWS_ACCESS_KEY_ID,
-//     secretAccessKey: network.AWS_SECRET_ACCESS_KEY,
-//   },
-// });
 
 const s3Client = new S3Client({
   region: process.env.AWS_S3_REGION,
@@ -34,20 +23,40 @@ const s3Client = new S3Client({
 const PROJECT_ID = process.env.PROJECT_ID;
 const DEPLOYEMENT_ID = process.env.DEPLOYEMENT_ID;
 
-const kafka = new Kafka({
-  clientId: `docker-build-server-${DEPLOYEMENT_ID}`,
-  brokers: [`${process.env.KAFKA_BROKER}`],
-  ssl: {
-    ca: [fs.readFileSync(path.join(__dirname, "kafka.pem"), "utf-8")],
-  },
-  sasl: {
-    username: process.env.KAFKA_USERNAME,
-    password: process.env.KAFKA_PASSWORD,
-    mechanism: "plain",
-  },
-});
+let producer = null;
 
-const producer = kafka.producer();
+if (isKafkaEnabled === true) {
+  const kafka = new Kafka({
+    clientId: `docker-build-server-${DEPLOYEMENT_ID}`,
+    brokers: [`${process.env.KAFKA_BROKER}`],
+    ssl: {
+      ca: [fs.readFileSync(path.join(__dirname, "kafka.pem"), "utf-8")],
+    },
+    sasl: {
+      username: process.env.KAFKA_USERNAME,
+      password: process.env.KAFKA_PASSWORD,
+      mechanism: "plain",
+    },
+  });
+
+  producer = kafka.producer();
+}
+
+async function publishStatus(status) {
+  if (isKafkaEnabled === true) {
+    await producer.send({
+      topic: `container-status`,
+      messages: [
+        {
+          key: "status",
+          value: JSON.stringify({ PROJECT_ID, DEPLOYEMENT_ID, status }),
+        },
+      ],
+    });
+  } else {
+    publisher.publish(`status:${DEPLOYEMENT_ID}`, JSON.stringify({ status }));
+  }
+}
 
 async function publishLog(log) {
   if (isKafkaEnabled === true) {
@@ -66,10 +75,13 @@ async function publishLog(log) {
 }
 
 async function init() {
-  await producer.connect();
+  if (isKafkaEnabled === true) {
+    await producer.connect();
+  }
 
   console.log("Executing script.js");
   await publishLog("Build Started...");
+  await publishStatus("IN_PROGRESS");
   const outDirPath = path.join(__dirname, "output");
 
   const p = exec(`cd ${outDirPath} && npm install && npm run build`);
@@ -79,12 +91,12 @@ async function init() {
     await publishLog(data.toString());
   });
 
-  p.stdout.on("error", async function (data) {
-    console.log("Error", data.toString());
-    await publishLog(`error: ${data.toString()}`);
-  });
-
-  p.on("close", async function () {
+  p.on("close", async function (code) {
+    if (code !== 0) {
+      await publishStatus("FAILED");
+      process.exit(1);
+    }
+    console.log(code, "code");
     console.log("Build Complete");
     await publishLog(`Build Complete`);
     const distFolderPath = path.join(__dirname, "output", "dist");
@@ -112,6 +124,8 @@ async function init() {
       console.log("uploaded", filePath);
     }
     await publishLog(`Done`);
+    await publishStatus("READY");
+
     console.log("Done...");
     process.exit(0);
   });

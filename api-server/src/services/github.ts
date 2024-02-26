@@ -1,6 +1,6 @@
 // // import { App } from "@octokit/app";
 // // import { request } from "@octokit/request";
-const axios = require("axios");
+import axios from 'axios';
 
 // // // Replace these values with your app's information
 // // const APP_ID = "831124";
@@ -59,13 +59,17 @@ const axios = require("axios");
 //   console.log(`Deploying repository: ${repoFullName}`);
 // };
 
-const getUserRepos = async (accessToken) => {
-  const response = await axios.get("https://api.github.com/user/repos", {
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-    },
-  });
-  return response.data;
+const getUserRepos = async (accessToken: string) => {
+  try {
+    const response = await axios.get('https://api.github.com/user/repos', {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+    return response.data;
+  } catch (err) {
+    console.error('Error: ', err);
+  }
 };
 
 // const createWebhook = async (accessToken, repoFullName) => {
@@ -98,4 +102,6 @@ const getUserRepos = async (accessToken) => {
 //   }
 // };
 
-module.exports = { getUserRepos };
+// module.exports = { getUserRepos };
+
+export { getUserRepos };

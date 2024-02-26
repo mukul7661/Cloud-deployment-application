@@ -1,8 +1,3 @@
-// import {
-//     Avatar,
-//     AvatarFallback,
-//     AvatarImage,
-//   } from "@/registry/new-york/ui/avatar"
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -14,10 +9,12 @@ import {
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { signOut } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
 import { Avatar, AvatarFallback, AvatarImage } from "./avatar";
 
 export function UserNav() {
+  const { data: session, status } = useSession();
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -26,7 +23,7 @@ export function UserNav() {
           className="relative h-8 w-8 rounded-full bg-white hover:bg-white"
         >
           <Avatar className="h-8 w-8">
-            <AvatarImage src="/profile-avatar.png" alt="@shadcn" />
+            <AvatarImage src="/profile-avatar.png" alt="@image" />
             <AvatarFallback>MY</AvatarFallback>
           </Avatar>
         </Button>
@@ -34,9 +31,11 @@ export function UserNav() {
       <DropdownMenuContent className="w-56" align="end" forceMount>
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none">shadcn</p>
+            <p className="text-sm font-medium leading-none">
+              {session?.user?.name}
+            </p>
             <p className="text-xs leading-none text-muted-foreground">
-              m@example.com
+              {session?.user?.email}
             </p>
           </div>
         </DropdownMenuLabel>

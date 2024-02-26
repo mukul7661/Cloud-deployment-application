@@ -1,9 +1,4 @@
-import axios, {
-  AxiosRequestConfig,
-  AxiosResponse,
-  AxiosRequestHeaders,
-} from "axios";
-// import RefreshTokenApi from "./refreshTokenApi";
+import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
 
 type AuthModule = {
   setToken: (value: string) => void;
@@ -25,11 +20,11 @@ type AuthModule = {
 
 export const AuthModule = (): AuthModule => {
   let token = "";
-  let authOrigins: string[] = ["http://localhost:8080"];
 
   const axiosInstance = axios.create({
-    baseURL: `http://${process.env.NEXT_PUBLIC_API_SERVER_URL}:9000`,
+    baseURL: `${process.env.NEXT_PUBLIC_API_SERVER_URL}`,
   });
+
   // @ts-ignore
   axiosInstance.interceptors.request.use((config: AxiosRequestConfig) => {
     return applyAuthToken(config);
@@ -39,9 +34,7 @@ export const AuthModule = (): AuthModule => {
     (response) => response,
     async (error) => {
       if (error.response && error.response.status === 401) {
-        // Do something with the 401 response
         console.log("Received a 401 response");
-        // await RefreshTokenApi();
         return Promise.resolve({
           data: null,
           status: 401,
@@ -59,15 +52,10 @@ export const AuthModule = (): AuthModule => {
   };
 
   const applyAuthToken = (config: AxiosRequestConfig): AxiosRequestConfig => {
-    // const destOrigin = new URL(config.url!).origin;
-    // const destOrigin = "http://localhost:9000";
-
-    // if (authOrigins.includes(destOrigin)) {
     config.headers = {
-      // "Access-Control-Allow-Credentials": true,
-      // "Content-Type": "application/json",
-      // ...config.headers,
+      "Content-Type": "application/json",
       withCredentials: true,
+      ...config.headers,
     };
     if (token) {
       config.headers = {
@@ -75,9 +63,6 @@ export const AuthModule = (): AuthModule => {
         Authorization: `Bearer ${token}`,
       };
     }
-    // }
-
-    console.log(config.headers, "config");
 
     return config;
   };
