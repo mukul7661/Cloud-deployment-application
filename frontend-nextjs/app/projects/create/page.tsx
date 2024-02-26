@@ -183,7 +183,7 @@ export default function CreateProject() {
                 Deploy your new project in one-click.
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="text-sm  logs-container border-2 rounded-lg p-4 h-[500px] overflow-y-auto">
               <RepoCardContainer>
                 {repos?.map((repo: z.infer<typeof Repo>) => (
                   <RepoCardItem

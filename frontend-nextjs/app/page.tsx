@@ -53,7 +53,7 @@ export default function Home() {
       )}
       {!loading && !(status === "loading") && (
         <>
-          <Landing />
+          <Landing setLoading={(e) => setLoading(e)} />
         </>
       )}
     </>

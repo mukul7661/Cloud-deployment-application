@@ -127,9 +127,9 @@ const Deployment = () => {
             <span className=" mr-2">Status of this deplpoyment:</span>
             <span>{deploymentStatus}</span>
           </Button>
-          <div className="w-[900px] m-auto mt-10">
+          <div className="w-[800px] m-auto mt-5">
             <div
-              className={`${firaCode.className} text-sm text-green-500 logs-container mt-5 border-green-500 border-2 rounded-lg p-4 h-[500px] overflow-y-auto`}
+              className={`${firaCode.className} text-sm text-green-500 logs-container mt-5 border-green-500 border-2 rounded-lg p-4 h-[400px] overflow-y-auto`}
             >
               status: {deploymentStatus}
               <pre className="flex flex-col gap-1">
