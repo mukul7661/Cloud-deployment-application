@@ -29,6 +29,7 @@ export default function GuestProject() {
 
   const handleClickDeploy = useCallback(async () => {
     // console.log(repoURL);
+    setLoading(true);
     const { data } = await authInstance.post(
       `${process.env.NEXT_PUBLIC_API_SERVER_URL}/api/project/create`,
       {
@@ -73,26 +74,35 @@ export default function GuestProject() {
   }, []);
 
   return (
-    <main className="flex justify-center items-center mt-40">
-      <div className="w-[600px]">
-        <span className="flex justify-start items-center gap-2">
-          <Github className="text-5xl" />
-          <Input
-            disabled={loading}
-            value={repoURL}
-            onChange={(e) => setRepoURL(e.target.value)}
-            type="url"
-            placeholder="Github URL"
-          />
-        </span>
-        <Button
-          onClick={handleClickDeploy}
-          disabled={!isValidURL[0] || loading}
-          className="w-full mt-3"
-        >
-          Deploy
-        </Button>
-      </div>
-    </main>
+    <>
+      {loading && (
+        <div className="loader-container">
+          <div className="loader"></div>
+        </div>
+      )}
+      {!loading && (
+        <main className="flex justify-center items-center mt-40">
+          <div className="w-[600px]">
+            <span className="flex justify-start items-center gap-2">
+              <Github className="text-5xl" />
+              <Input
+                disabled={loading}
+                value={repoURL}
+                onChange={(e) => setRepoURL(e.target.value)}
+                type="url"
+                placeholder="Github URL"
+              />
+            </span>
+            <Button
+              onClick={handleClickDeploy}
+              disabled={!isValidURL[0] || loading}
+              className="w-full mt-3"
+            >
+              Deploy
+            </Button>
+          </div>
+        </main>
+      )}
+    </>
   );
 }

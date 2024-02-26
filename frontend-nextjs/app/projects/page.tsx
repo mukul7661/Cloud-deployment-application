@@ -139,12 +139,12 @@ const Projects = () => {
                     </CardTitle>
                     <a
                       href={`http://${project?.subDomain}.mukulyadav.com:8000`}
-                      className="flex gap-2 text-[14px] hover:underline  align-middle mb-2"
+                      className="flex gap-2 text-[12px] hover:underline  align-middle mb-2"
                       target="_blank"
                       rel="noopener noreferrer"
                       onClick={(e) => e.stopPropagation()}
                     >
-                      <Link className="w-[14px]" />
+                      <Link className="w-[12px]" />
                       {`${project?.subDomain}.mukulyadav.com:8000`}
                     </a>
                   </div>
@@ -168,7 +168,7 @@ const Projects = () => {
                       rel="noopener noreferrer"
                       onClick={(e) => e.stopPropagation()}
                     >
-                      <Github className="w-[14px]" />
+                      <Github className="w-[12px]" />
                       {project?.gitURL.slice(17).replace(/\.git$/, "")}
                     </a>
 
