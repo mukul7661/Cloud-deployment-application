@@ -37,7 +37,9 @@ const useDeployProject = () => {
       console.error("Error deploying project: ", error);
       setError("Error deploying project");
     } finally {
-      setLoading(false);
+      // setTimeout(() => {
+      // setLoading(false);
+      // }, 200);
     }
   };
 

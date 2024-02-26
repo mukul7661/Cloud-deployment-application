@@ -1,22 +1,22 @@
-import Redis from 'ioredis';
-import ClickHouseClient from './ClickHouseClient';
-import { v4 as uuidv4 } from 'uuid';
-import PrismaManager from './PrismaManager';
+import Redis from "ioredis";
+import ClickHouseClient from "./ClickHouseClient";
+import { v4 as uuidv4 } from "uuid";
+import PrismaManager from "./PrismaManager";
 
 class RedisManager {
   private static instance: RedisManager | null = null;
   private subscriber: Redis;
-  private prisma: ReturnType<PrismaManager['getPrisma']>;
+  private prisma: ReturnType<PrismaManager["getPrisma"]>;
   private isClickhouseEnabled: boolean;
   private isInitialized: boolean;
   private clickhouseClient: ClickHouseClient | null = null;
 
   private constructor() {
     this.subscriber = new Redis(process.env.AIVEN_REDIS_URL as string);
-    const prismaManager = new PrismaManager();
+    const prismaManager = PrismaManager.getInstance();
     this.prisma = prismaManager.getPrisma();
 
-    this.isClickhouseEnabled = process.env.CLICKHOUSE_ENABLED === 'true';
+    this.isClickhouseEnabled = process.env.CLICKHOUSE_ENABLED === "true";
     this.isInitialized = false;
 
     if (this.isClickhouseEnabled) {
@@ -34,24 +34,24 @@ class RedisManager {
   public async initRedisSubscribe(): Promise<void> {
     try {
       if (this.isInitialized) {
-        console.log('Already subscribed to logs.');
+        console.log("Already subscribed to logs.");
         return;
       }
 
-      console.log('Subscribed to logs and status....');
-      this.subscriber.psubscribe('logs:*', 'status:*');
+      console.log("Subscribed to logs and status....");
+      this.subscriber.psubscribe("logs:*", "status:*");
 
       this.subscriber.on(
-        'pmessage',
+        "pmessage",
         async (pattern: string, channel: string, message: string) => {
           try {
             console.log(message, channel, pattern);
-            const deploymentId = channel.split(':')[1];
+            const deploymentId = channel.split(":")[1];
             console.log(deploymentId);
-            if (pattern === 'logs:*') {
+            if (pattern === "logs:*") {
               if (this.isClickhouseEnabled && this.clickhouseClient) {
                 await this.clickhouseClient.client.insert({
-                  table: 'log_events',
+                  table: "log_events",
                   values: [
                     {
                       event_id: uuidv4(),
@@ -59,7 +59,7 @@ class RedisManager {
                       log: message,
                     },
                   ],
-                  format: 'JSONEachRow',
+                  format: "JSONEachRow",
                 });
               } else {
                 await this.prisma.eventLog.create({
@@ -69,7 +69,7 @@ class RedisManager {
                   },
                 });
               }
-            } else if (pattern === 'status:*') {
+            } else if (pattern === "status:*") {
               const status = JSON.parse(message)?.status;
               await this.prisma.deployment.update({
                 where: {
@@ -81,14 +81,14 @@ class RedisManager {
               });
             }
           } catch (err) {
-            console.error('Error: ', err);
+            console.error("Error: ", err);
           }
         },
       );
 
       this.isInitialized = true;
     } catch (err) {
-      console.log('Error: ', err);
+      console.log("Error: ", err);
     }
   }
 }

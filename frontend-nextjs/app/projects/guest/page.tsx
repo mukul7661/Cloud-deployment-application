@@ -10,8 +10,8 @@ import { authInstance } from "@/lib/authInstance";
 
 export default function GuestProject() {
   const { data: session, status } = useSession();
-  console.log("status", status);
-  console.log("session", session);
+  // console.log("status", status);
+  // console.log("session", session);
 
   const router = useRouter();
 
@@ -28,36 +28,38 @@ export default function GuestProject() {
   }, [repoURL]);
 
   const handleClickDeploy = useCallback(async () => {
-    console.log(repoURL);
+    // console.log(repoURL);
     const { data } = await authInstance.post(
       `${process.env.NEXT_PUBLIC_API_SERVER_URL}/api/project/create`,
       {
         gitURL: repoURL,
         name: "guest-project",
+        isGuest: true,
       },
       { withCredentials: true }
     );
 
-    console.log(data?.data?.project?.id);
+    console.log(data?.project?.id);
 
-    const projectId = data?.data?.project?.id;
+    const projectId = data?.project?.id;
 
     const res = await authInstance.post(
       `${process.env.NEXT_PUBLIC_API_SERVER_URL}/api/project/deploy`,
       {
         projectId,
+        isGuest: true,
       },
       { withCredentials: true }
     );
     console.log(res);
 
     const deploymentId = res?.data?.data?.deploymentId;
-    router.push(`/projects/${projectId}/${deploymentId}`);
+    router.push(`/projects/guest/${deploymentId}`);
   }, [repoURL, router]);
 
   useEffect(() => {
     const cookieValue = serialize("is-guest", "true", {
-      httpOnly: true,
+      // httpOnly: true,
       maxAge: 30 * 60 * 60 * 24,
       path: "/",
     });
@@ -71,7 +73,7 @@ export default function GuestProject() {
   }, []);
 
   return (
-    <main className="flex justify-center items-center h-[100vh]">
+    <main className="flex justify-center items-center mt-40">
       <div className="w-[600px]">
         <span className="flex justify-start items-center gap-2">
           <Github className="text-5xl" />
@@ -90,20 +92,6 @@ export default function GuestProject() {
         >
           Deploy
         </Button>
-        {/* {deployPreviewURL && (
-          <div className="mt-2 bg-slate-900 py-4 px-2 rounded-lg">
-            <p>
-              Preview URL{" "}
-              <a
-                target="_blank"
-                className="text-sky-400 bg-sky-950 px-3 py-2 rounded-lg"
-                href={deployPreviewURL}
-              >
-                {deployPreviewURL}
-              </a>
-            </p>
-          </div>
-        )} */}
       </div>
     </main>
   );

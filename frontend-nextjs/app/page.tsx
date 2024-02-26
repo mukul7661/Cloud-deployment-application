@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { serialize } from "cookie";
 import { getServerSession } from "next-auth";
 import { authOptions } from "./api/auth/[...nextauth]/route";
+import { Landing } from "@/components/Landing";
 
 async function fetchServerSession() {
   const session = await getServerSession(authOptions);
@@ -28,7 +29,6 @@ export default function Home() {
 
     if (session !== null) {
       if (session?.user?.token) {
-        console.log("setting cookie");
         const cookieValue = serialize("access-token", session?.user?.token, {
           // httpOnly: true,
           maxAge: 30 * 60 * 60 * 24,
@@ -53,8 +53,7 @@ export default function Home() {
       )}
       {!loading && !(status === "loading") && (
         <>
-          Using kafka, AWS ECS, redis, postgres, docker under the hood for
-          seamless deployment experience
+          <Landing />
         </>
       )}
     </>

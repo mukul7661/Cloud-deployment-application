@@ -18,6 +18,7 @@ export const UserDTO = z.object({
 export const CreateProjectRequestDTO = z.object({
   name: z.string(),
   gitURL: z.string(),
+  isGuest: z.boolean().optional(),
 });
 
 export const DeployProjectRequestDTO = z.object({

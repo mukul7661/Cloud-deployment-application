@@ -105,9 +105,9 @@ export default function CreateProject() {
         },
         { withCredentials: true }
       );
-    console.log(data);
+    // console.log(data);
     const parsedData = CreateProjectResponseSchema.safeParse(data);
-    console.log(parsedData);
+    // console.log(parsedData);
 
     if (!parsedData.success) {
       console.error("Error: ", parsedData.error);

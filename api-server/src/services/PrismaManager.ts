@@ -1,29 +1,34 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from "@prisma/client";
 
 class PrismaManager {
+  private static instance: PrismaManager | null = null;
   private dbConnected: boolean;
   private prisma: PrismaClient | null;
-  private count = 0;
 
-  constructor() {
+  private constructor() {
     this.dbConnected = false;
     this.prisma = null;
   }
 
+  static getInstance(): PrismaManager {
+    if (!PrismaManager.instance) {
+      PrismaManager.instance = new PrismaManager();
+    }
+
+    return PrismaManager.instance;
+  }
+
   getPrisma() {
-    console.log(this.dbConnected);
     if (!this.dbConnected) {
-      this.count++;
-      console.log(this.count);
       this.prisma = new PrismaClient();
 
       this.dbConnected = true;
+    }
 
-      console.log(this.dbConnected, 'heh');
-    }
     if (!this.prisma) {
-      throw new Error('PrismaClient is not initialized');
+      throw new Error("PrismaClient is not initialized");
     }
+
     return this.prisma;
   }
 }

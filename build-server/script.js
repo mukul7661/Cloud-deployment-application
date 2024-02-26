@@ -91,6 +91,10 @@ async function init() {
     await publishLog(data.toString());
   });
 
+  p.stderr.on("data", async function (data) {
+    console.error(data.toString());
+    await publishLog(data.toString());
+  });
   p.on("close", async function (code) {
     if (code !== 0) {
       await publishStatus("FAILED");
@@ -126,8 +130,10 @@ async function init() {
     await publishLog(`Done`);
     await publishStatus("READY");
 
-    console.log("Done...");
-    process.exit(0);
+    setTimeout(() => {
+      console.log("Done...");
+      process.exit(0);
+    }, 500);
   });
 }
 

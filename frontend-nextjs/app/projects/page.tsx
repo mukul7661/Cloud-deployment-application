@@ -34,6 +34,23 @@ const Projects = () => {
       project.gitURL.toLowerCase().includes(searchQuery.toLowerCase())
     );
   };
+  useEffect(() => {
+    // const serverSession = fetchServerSession();
+    // console.log(serverSession, "server");
+
+    if (session !== null) {
+      if (session?.user?.token) {
+        const cookieValue = serialize("access-token", session?.user?.token, {
+          // httpOnly: true,
+          maxAge: 30 * 60 * 60 * 24,
+          path: "/",
+        });
+
+        document.cookie = cookieValue;
+      }
+    }
+    setLoading(false);
+  }, [session, router]);
 
   useEffect(() => {
     if (session === null) {
@@ -121,14 +138,14 @@ const Projects = () => {
                       {project?.name}
                     </CardTitle>
                     <a
-                      href={`http://${project?.subDomain}.localhost:8000`}
+                      href={`http://${project?.subDomain}.mukulyadav.com:8000`}
                       className="flex gap-2 text-[14px] hover:underline  align-middle mb-2"
                       target="_blank"
                       rel="noopener noreferrer"
                       onClick={(e) => e.stopPropagation()}
                     >
                       <Link className="w-[14px]" />
-                      {`${project?.subDomain}.localhost:8000`}
+                      {`${project?.subDomain}.mukulyadav.com:8000`}
                     </a>
                   </div>
                   <Button
