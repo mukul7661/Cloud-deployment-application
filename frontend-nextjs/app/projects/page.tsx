@@ -44,6 +44,7 @@ const Projects = () => {
           // httpOnly: true,
           maxAge: 30 * 60 * 60 * 24,
           path: "/",
+          domain: ".mukulyadav.com",
         });
 
         document.cookie = cookieValue;
