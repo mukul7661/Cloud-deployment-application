@@ -7,9 +7,19 @@
     "lint": "eslint 'src/**/*.ts'",
     "lint:fix": "eslint 'src/**/*.ts' --fix",
     "format": "prettier --write 'src/**/*.ts'",
-    "dev": "nodemon dist/index.js",
+    "dev": "NODE_ENV=development nodemon dist/index.js",
     "start": "node src/index.js",
     "build": "tsc -b"
+  },
+  "nodemonConfig": {
+    "watch": [
+      "src"
+    ],
+    "ext": "ts",
+    "ignore": [
+      "src/**/*.spec.ts"
+    ],
+    "exec": "ts-node ./src/index.ts"
   },
   "author": "",
   "license": "ISC",

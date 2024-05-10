@@ -117,7 +117,7 @@ async function init() {
       await publishLog(`uploading ${file}`);
 
       const command = new PutObjectCommand({
-        Bucket: "vercel-outputs",
+        Bucket: "vercel--outputs",
         Key: `__outputs/${PROJECT_ID}/${file}`,
         Body: fs.createReadStream(filePath),
         ContentType: mime.lookup(filePath),

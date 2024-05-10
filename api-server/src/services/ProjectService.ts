@@ -217,11 +217,11 @@ class ProjectService {
         awsvpcConfiguration: {
           assignPublicIp: "ENABLED",
           subnets: [
-            "subnet-0cb401b73f812753d",
-            "subnet-0920ef9e787b6e502",
-            "subnet-057cd2a2e2f0faab4",
+            "subnet-0bc6af112d003e2aa",
+            "subnet-02b6195c72bf57433",
+            "subnet-04991e4800e080fb0",
           ],
-          securityGroups: ["sg-08cfda151d157bab5"],
+          securityGroups: ["sg-008be3b60cfbddfd2"],
         },
       },
       overrides: {
